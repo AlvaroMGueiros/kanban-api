@@ -1,6 +1,20 @@
 spring:
   application:
     name: kanban-api
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/kanban}
+    username: ${DATABASE_USERNAME:kanban}
+    password: ${DATABASE_PASSWORD:kanbanLocal}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: kanban
+  flyway:
+    default-schema: public
+    clean-disabled: true
 
 management:
   endpoints:

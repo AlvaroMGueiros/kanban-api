@@ -1,0 +1,11 @@
+.git
+.github
+.idea
+.vscode
+target
+docs
+*.log
+.env
+.env.*
+README.md
+AI_USAGE.md
