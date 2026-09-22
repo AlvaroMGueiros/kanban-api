@@ -10,6 +10,7 @@ public final class ProjectStatusPolicy {
     }
 
     public static ProjectStatus calculate(ProjectSchedule schedule, LocalDate today) {
+        schedule.validateAt(today);
         if (schedule.getActualEndDate() != null) {
             return ProjectStatus.CONCLUIDO;
         }

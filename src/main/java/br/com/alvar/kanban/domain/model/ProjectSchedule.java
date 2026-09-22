@@ -42,6 +42,10 @@ public class ProjectSchedule {
         if (actualEndDate != null && actualEndDate.isAfter(today)) {
             throw new BusinessRuleException("Término realizado não pode estar no futuro.");
         }
+        if (actualStartDate != null && actualEndDate == null && plannedEndDate == null) {
+            throw new BusinessRuleException(
+                    "Projeto iniciado e não concluído deve ter término previsto informado.");
+        }
     }
 
     public ProjectSchedule withActualStartDate(LocalDate startDate) {

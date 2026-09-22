@@ -111,11 +111,10 @@ public final class KanbanTransitionService {
             ProjectSchedule schedule, ProjectStatus target, LocalDate today) {
         return switch (target) {
             case A_INICIAR -> {
-                ProjectSchedule updated = schedule.withActualEndDate(null);
-                requireStatus(updated, ProjectStatus.A_INICIAR, today,
-                        "Ao reabrir o projeto, ele ficaria ATRASADO com as datas atuais. "
-                        + "Ajuste 'inicioPrevisto' e 'terminoPrevisto' antes de retornar a A_INICIAR.");
-                yield updated;
+                throw new TransitionNotAllowedException(
+                        "Para retornar a A_INICIAR, remova 'terminoRealizado' pela edição do projeto, "
+                        + "mantenha 'inicioRealizado' vazio e ajuste 'inicioPrevisto' e "
+                        + "'terminoPrevisto' para depois de hoje.");
             }
             case EM_ANDAMENTO -> {
                 ProjectSchedule updated = schedule.withActualEndDate(null);

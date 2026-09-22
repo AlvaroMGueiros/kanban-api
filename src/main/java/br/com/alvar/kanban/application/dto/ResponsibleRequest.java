@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+@Schema(description = "Dados para criar ou atualizar um responsável",
+        example = "{\"name\":\"Ana Silva\",\"email\":\"ana.silva@example.com\","
+                + "\"role\":\"Gerente de projetos\",\"department\":\"Planejamento\"}")
 public record ResponsibleRequest(
         @Schema(example = "Ana Silva")
         @NotBlank(message = "Nome deve ser preenchido.") @Size(max = 120) String name,

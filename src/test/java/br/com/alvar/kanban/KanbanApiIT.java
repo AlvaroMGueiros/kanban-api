@@ -243,6 +243,24 @@ class KanbanApiIT extends ApiIntegrationTest {
     // -------------------------------------------------------------------------
 
     @Test
+    void shouldRequireExplicitEditingFromConcluidoToAIniciarWithoutPartialUpdate() throws Exception {
+        long responsibleId = createResponsible("Ana", "ana@example.com");
+        ProjectResponse project = createProject(new ProjectRequest("Obra",
+                List.of(responsibleId), TODAY.plusDays(1), TODAY.plusDays(5), null, TODAY));
+
+        mockMvc.perform(patch("/api/kanban/projects/" + project.id() + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new TransitionRequest(ProjectStatus.A_INICIAR))))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("terminoRealizado")));
+
+        mockMvc.perform(get("/api/projects/" + project.id()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CONCLUIDO"))
+                .andExpect(jsonPath("$.actualEndDate").value(TODAY.toString()));
+    }
+
+    @Test
     void shouldTransitionFromConcluidoToAtrasado() throws Exception {
         long r = createResponsible("Ana", "ana@example.com");
         // Create already concluded with past planned dates

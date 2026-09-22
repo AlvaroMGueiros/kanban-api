@@ -49,17 +49,18 @@ Precedência:
 
 1. `CONCLUIDO`: término realizado preenchido.
 2. `ATRASADO`: sem conclusão e início previsto vencido sem início realizado, ou término previsto vencido.
-3. `EM_ANDAMENTO`: início realizado e sem atraso.
+3. `EM_ANDAMENTO`: início realizado, término realizado vazio e término previsto hoje ou depois.
 4. `A_INICIAR`: demais casos.
 
-O dia atual vem de `Clock`, com `America/Fortaleza` como padrão. Projeto que vence hoje ainda está em andamento. Dias de atraso contam dias corridos após o término previsto. O percentual restante usa duas casas, `HALF_UP` e limite 0..100.
+O dia atual vem de `Clock`, com `America/Fortaleza` como padrão. O texto exige término previsto maior que hoje, mas não define um estado para projeto iniciado no próprio dia do prazo. A implementação considera esse projeto em andamento durante todo o dia e o classifica como atrasado no dia seguinte. Projeto iniciado sem término previsto é rejeitado. Dias de atraso contam dias corridos após o término previsto. O percentual restante usa duas casas, `HALF_UP` e limite 0..100.
 
 ## Transições
 
 `PATCH /api/kanban/projects/{id}/status` recebe `targetStatus`. O serviço calcula a origem, aplica o efeito e confirma se as datas produzem o destino. Mesmo status é idempotente; incompatibilidade retorna `422` sem persistir efeitos.
 
 - Para `CONCLUIDO`, preenche término realizado com hoje.
-- De `CONCLUIDO`, remove término realizado e valida o resultado.
+- `CONCLUIDO -> A_INICIAR` não altera datas automaticamente: orienta a edição explícita do término realizado e das datas previstas.
+- De `CONCLUIDO` para `EM_ANDAMENTO` ou `ATRASADO`, remove término realizado e valida o resultado.
 - `A_INICIAR -> EM_ANDAMENTO` preenche início realizado com hoje.
 - `EM_ANDAMENTO -> A_INICIAR` remove início realizado.
 - Destinos dependentes de atraso não fabricam datas; o erro orienta o ajuste necessário.
@@ -103,7 +104,7 @@ A API fica em `http://localhost:8080`; o PostgreSQL, em `127.0.0.1:5433`. `.env.
 ./mvnw verify
 ```
 
-Executa 70 testes unitários e 43 testes de integração/API. A integração usa PostgreSQL 17.11 descartável via Testcontainers e valida migrations, constraints, transações, filtros, paginação e contratos HTTP. Docker precisa estar ativo. Relatórios ficam em `target/surefire-reports` e `target/failsafe-reports`.
+Executa 70 testes unitários e 44 testes de integração/API. A integração usa PostgreSQL 17.11 descartável via Testcontainers e valida migrations, constraints, transações, filtros, paginação e contratos HTTP. Docker precisa estar ativo. Relatórios ficam em `target/surefire-reports` e `target/failsafe-reports`.
 
 ## Swagger
 
@@ -135,7 +136,7 @@ Importe a [coleção Postman](docs/api/kanban-api.postman_collection.json) para 
 
 ## Banco de dados
 
-As migrations criam o schema `kanban`, `responsibles`, `projects`, `projectResponsibles`, constraints e índices. O histórico Flyway fica em `public.flyway_schema_history`. Auditoria usa `Instant`; cronograma usa `LocalDate`; projetos possuem versão otimista.
+As migrations criam o schema `kanban`, `responsibles`, `projects`, `projectResponsibles`, constraints e índices para vínculo, secretaria e datas usadas nos filtros de status. O histórico Flyway fica em `public.flyway_schema_history`. Auditoria usa `Instant`; cronograma usa `LocalDate`; projetos possuem versão otimista. A busca por substring não recebe B-tree, pois consultas `%texto%` não aproveitam esse tipo de índice.
 
 ## Limitações
 

@@ -16,9 +16,12 @@ passar essa data ao domínio, inclusive para métricas e filtros de consulta.
 O Clock usa America/Fortaleza por padrão, configurável por app.timeZone.
 A auditoria usa Instant com precisão de microssegundos, compatível com PostgreSQL.
 
-Projeto iniciado com vencimento hoje continua em andamento. Sem término previsto,
-também permanece em andamento quando não há atraso. Essas decisões cobrem lacunas
-do enunciado. Datas previstas nulas e conclusão direta sem início são permitidas.
+O enunciado exige término previsto posterior a hoje para EM_ANDAMENTO, mas não define
+um estado para projeto iniciado no dia exato do prazo. Considerá-lo em andamento durante
+todo o dia evita que um registro válido passe a causar erro apenas pela mudança da data;
+no dia seguinte ele fica ATRASADO. Projeto iniciado sem término previsto é rejeitado.
+Datas previstas nulas continuam permitidas antes do início, e conclusão direta sem início
+permanece permitida.
 
 Percentual tem duas casas, arredondamento HALF_UP e limite 0..100. Conclusão,
 duração não positiva e ausência de datas retornam zero. Dias de atraso são dias

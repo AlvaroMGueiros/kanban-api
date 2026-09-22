@@ -32,7 +32,6 @@ class ProjectStatusPolicyTest {
                 Arguments.of("iniciado com prazo vencido", new ProjectSchedule(null, yesterday, yesterday, null), ProjectStatus.ATRASADO),
                 Arguments.of("iniciado dentro do prazo", new ProjectSchedule(yesterday, tomorrow, yesterday, null), ProjectStatus.EM_ANDAMENTO),
                 Arguments.of("iniciado vence hoje", new ProjectSchedule(yesterday, today, yesterday, null), ProjectStatus.EM_ANDAMENTO),
-                Arguments.of("iniciado sem previsão", new ProjectSchedule(null, null, today, null), ProjectStatus.EM_ANDAMENTO),
                 Arguments.of("conclusão prevalece ao atraso", new ProjectSchedule(yesterday, yesterday, null, today), ProjectStatus.CONCLUIDO),
                 Arguments.of("conclusão com início", new ProjectSchedule(yesterday, yesterday, yesterday, today), ProjectStatus.CONCLUIDO),
                 Arguments.of("conclusão sem previsão e início", new ProjectSchedule(null, null, null, today), ProjectStatus.CONCLUIDO),

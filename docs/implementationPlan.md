@@ -55,8 +55,9 @@ sufixos Dto/List. Não há integração Saturno no escopo.
 
 - Precedência: CONCLUIDO, ATRASADO, EM_ANDAMENTO, A_INICIAR.
 - Conclusão vence as outras regras; atraso pode decorrer de início ou término.
-- Projeto iniciado, não concluído e sem atraso está em andamento, inclusive no
-  dia do vencimento e quando não tem término previsto.
+- Projeto iniciado e não concluído exige término previsto. No dia do prazo permanece
+  em andamento e passa a atrasado no dia seguinte, decisão documentada para a lacuna
+  do enunciado; prazo ausente é rejeitado.
 - Datas previstas podem ser nulas. Validar término >= início para cada par
   previsto/realizado quando ambos existirem. Datas realizadas não podem ser futuras.
 - Permitir conclusão sem início realizado, preservando a transição direta exigida.
@@ -84,14 +85,14 @@ Rejeições não persistem efeitos parciais. Mesmo status é idempotente.
 - Atrasado -> A iniciar: sem efeito; orientar ajuste das datas.
 - Atrasado -> Em andamento: sem efeito; orientar ajuste das datas.
 - Atrasado -> Concluído: término realizado = hoje.
-- Concluído -> A iniciar: término realizado = null; exigir ausência de início e atraso.
+- Concluído -> A iniciar: sem efeito automático; orientar remoção explícita do
+  término realizado e ajuste das datas por edição.
 - Concluído -> Em andamento: término realizado = null; exigir início e ausência de atraso.
 - Concluído -> Atrasado: término realizado = null; exigir atraso real.
 
-A remoção automática de término em Concluído -> A iniciar segue o pedido do usuário,
-que diverge do PDF nesse ponto. Transições sem efeito não fabricam status; ajustar
-as datas por edição recalcula o status. O PDF cita confirmações obrigatórias sem
-defini-las: não inventar um protocolo de confirmação.
+Transições sem efeito não fabricam status; ajustar as datas por edição recalcula o
+status. O PDF cita confirmações obrigatórias sem defini-las: não inventar um protocolo
+de confirmação.
 
 ## HTTP
 

@@ -36,6 +36,12 @@ class ProjectScheduleTest {
     }
 
     @Test
+    void shouldRejectStartedProjectWithoutPlannedEnd() {
+        assertThatThrownBy(() -> new ProjectSchedule(today.minusDays(1), null, today, null).validateAt(today))
+                .isInstanceOf(BusinessRuleException.class).hasMessageContaining("informado");
+    }
+
+    @Test
     void shouldAllowZeroDurationNullDatesAndDirectCompletion() {
         assertThatCode(() -> {
             new ProjectSchedule(today, today, today, today).validateAt(today);

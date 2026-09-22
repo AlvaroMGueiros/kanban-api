@@ -30,7 +30,7 @@ Os commits foram feitos durante o desenvolvimento normal do projeto, sem altera�
 
 Além dos testes unitários, utilizei testes de integração com PostgreSQL através de Testcontainers, MockMvc para a API, Flyway para validar as migrations e Docker Compose para conferir a execução da aplicação em um ambiente próximo ao descrito no desafio.
 
-Ao final, `./mvnw verify` executava 70 testes unitários e 43 testes de integração com sucesso.
+Ao final, `./mvnw verify` executava 70 testes unitários e 44 testes de integração com sucesso.
 
 ## Exemplo de interação com a IA
 
@@ -50,9 +50,9 @@ Por esse motivo, descartei essa abordagem e levei a condição para a consulta a
 
 Outro caso apareceu na transição de `CONCLUIDO` para `A_INICIAR`.
 
-Uma implementação inicial removia tanto `inicioRealizado` quanto `terminoRealizado`. Ao revisar a tabela de transições do enunciado, percebi que essa não era a regra definida. A transição precisa ser validada a partir das datas restantes e o status final precisa corresponder ao solicitado.
+Uma implementação inicial propunha remover datas realizadas automaticamente. Ao revisar a tabela oficial de transições, percebi que `CONCLUIDO -> A_INICIAR` não possui ação automática: ela deve orientar a remoção do término realizado e o ajuste das datas por meio da edição do projeto.
 
-A implementação foi ajustada para respeitar essa regra e rejeitar a operação quando, depois das alterações permitidas, o projeto continuava sendo classificado em outro status.
+A implementação foi ajustada para rejeitar essa transição sem modificar o cronograma. Isso também garante que uma tentativa inválida não deixe alterações parciais persistidas.
 
 Também houve uma diferença nos testes de auditoria envolvendo `Instant`. A aplicação trabalhava inicialmente com precisão superior à armazenada pelo PostgreSQL. Isso fazia valores semanticamente equivalentes falharem em algumas comparações de integração.
 

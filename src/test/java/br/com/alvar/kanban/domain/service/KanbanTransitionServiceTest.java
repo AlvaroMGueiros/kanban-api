@@ -167,10 +167,8 @@ class KanbanTransitionServiceTest {
     }
 
     @Test
-    void atrasado_toEmAndamento_succeedsWhenDatesAlreadyAllowIt() {
-        // actualStart filled, plannedEnd is today → EM_ANDAMENTO (not overdue)
+    void atrasado_toEmAndamento_isIdempotentWhenDeadlineIsToday() {
         ProjectSchedule schedule = new ProjectSchedule(YESTERDAY, TODAY, TODAY, null);
-        // This schedule currently yields EM_ANDAMENTO, not ATRASADO — so this is an idempotent call
         ProjectSchedule result = KanbanTransitionService.transition(schedule, ProjectStatus.EM_ANDAMENTO, TODAY);
         assertThat(result).isSameAs(schedule);
     }
@@ -189,12 +187,13 @@ class KanbanTransitionServiceTest {
     // =========================================================================
 
     @Test
-    void concluido_toAIniciar_keepsActualStartAndRejectsMismatchedResult() {
-        ProjectSchedule schedule = new ProjectSchedule(TOMORROW, TOMORROW.plusDays(5), TODAY, TODAY);
+    void concluido_toAIniciar_requiresExplicitDateEditingWithoutChangingSchedule() {
+        ProjectSchedule schedule = new ProjectSchedule(TOMORROW, TOMORROW.plusDays(5), null, TODAY);
 
-        assertThatThrownBy(() -> KanbanTransitionService.transition(
-                schedule, ProjectStatus.A_INICIAR, TODAY))
-                .isInstanceOf(TransitionNotAllowedException.class);
+        assertThatThrownBy(() -> KanbanTransitionService.transition(schedule, ProjectStatus.A_INICIAR, TODAY))
+                .isInstanceOf(TransitionNotAllowedException.class)
+                .hasMessageContaining("remova 'terminoRealizado'")
+                .hasMessageContaining("inicioPrevisto");
     }
 
     @Test
@@ -203,7 +202,7 @@ class KanbanTransitionServiceTest {
         ProjectSchedule schedule = new ProjectSchedule(YESTERDAY, TOMORROW, TODAY, TODAY);
         assertThatThrownBy(() -> KanbanTransitionService.transition(schedule, ProjectStatus.A_INICIAR, TODAY))
                 .isInstanceOf(TransitionNotAllowedException.class)
-                .hasMessageContaining("ATRASADO");
+                .hasMessageContaining("terminoRealizado");
     }
 
     @Test
@@ -277,12 +276,10 @@ class KanbanTransitionServiceTest {
     // =========================================================================
 
     @Test
-    void boundary_projectEndingTodayIsStillInProgress() {
-        // plannedEnd = today → not overdue, EM_ANDAMENTO
+    void boundary_projectEndingTodayRemainsInProgress() {
         ProjectSchedule schedule = new ProjectSchedule(YESTERDAY, TODAY, TODAY, null);
         assertThat(ProjectStatusPolicy.calculate(schedule, TODAY)).isEqualTo(ProjectStatus.EM_ANDAMENTO);
 
-        // Can be concluded
         ProjectSchedule concluded = KanbanTransitionService.transition(schedule, ProjectStatus.CONCLUIDO, TODAY);
         assertThat(ProjectStatusPolicy.calculate(concluded, TODAY)).isEqualTo(ProjectStatus.CONCLUIDO);
     }
@@ -295,14 +292,11 @@ class KanbanTransitionServiceTest {
     }
 
     @Test
-    void boundary_projectStartedYesterdayWithNoDates() {
-        // No planned dates, actualStart set → EM_ANDAMENTO
+    void boundary_projectStartedWithoutPlannedEndIsRejected() {
         ProjectSchedule schedule = new ProjectSchedule(null, null, YESTERDAY, null);
-        assertThat(ProjectStatusPolicy.calculate(schedule, TODAY)).isEqualTo(ProjectStatus.EM_ANDAMENTO);
-
-        // Can be concluded directly
-        ProjectSchedule result = KanbanTransitionService.transition(schedule, ProjectStatus.CONCLUIDO, TODAY);
-        assertThat(result.getActualEndDate()).isEqualTo(TODAY);
+        assertThatThrownBy(() -> ProjectStatusPolicy.calculate(schedule, TODAY))
+                .isInstanceOf(br.com.alvar.kanban.domain.exception.BusinessRuleException.class)
+                .hasMessageContaining("informado");
     }
 
     @Test

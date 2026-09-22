@@ -39,7 +39,15 @@ class KanbanApplicationIT extends ApiIntegrationTest {
         assertThat(schemaName).isEqualTo("kanban");
         assertThat(flyway.info().applied())
                 .extracting(migration -> migration.getVersion().getVersion())
-                .contains("1");
+                .contains("1", "2", "3", "4");
+        Integer filterIndexCount = jdbcTemplate.queryForObject("""
+                SELECT count(*) FROM pg_indexes
+                WHERE schemaname = 'kanban'
+                  AND indexname IN ('responsiblesByDepartment', 'projectsByPlannedStartDate',
+                                    'projectsByPlannedEndDate', 'projectsByActualStartDate',
+                                    'projectsByActualEndDate')
+                """, Integer.class);
+        assertThat(filterIndexCount).isEqualTo(5);
         assertThat(flyway.info().pending()).isEmpty();
         assertThat(flyway.validateWithResult().validationSuccessful).isTrue();
         assertThat(flyway.migrate().migrationsExecuted).isZero();
@@ -53,7 +61,9 @@ class KanbanApplicationIT extends ApiIntegrationTest {
                 .andExpect(jsonPath("$.paths['/api/projects']").exists())
                 .andExpect(jsonPath("$.paths['/api/kanban/projects/{id}/status'].patch.responses['422']").exists())
                 .andExpect(jsonPath("$.components.schemas.ApiError").exists())
-                .andExpect(jsonPath("$.components.schemas.ProjectResponse").exists());
+                .andExpect(jsonPath("$.components.schemas.ApiError.example").exists())
+                .andExpect(jsonPath("$.components.schemas.ProjectRequest.example").exists())
+                .andExpect(jsonPath("$.components.schemas.ProjectResponse.example").exists());
 
         mockMvc.perform(get("/swagger-ui"))
                 .andExpect(status().is3xxRedirection())
