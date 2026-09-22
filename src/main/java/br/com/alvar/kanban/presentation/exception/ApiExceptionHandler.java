@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import br.com.alvar.kanban.domain.exception.BusinessRuleException;
 import br.com.alvar.kanban.domain.exception.ConflictException;
 import br.com.alvar.kanban.domain.exception.ResourceNotFoundException;
+import br.com.alvar.kanban.domain.exception.TransitionNotAllowedException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -41,6 +42,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler(BusinessRuleException.class)
     ResponseEntity<ApiError> businessRule(BusinessRuleException exception, HttpServletRequest request) {
         return error(HttpStatus.UNPROCESSABLE_ENTITY, "BUSINESS_RULE_VIOLATION", exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(TransitionNotAllowedException.class)
+    ResponseEntity<ApiError> transitionNotAllowed(TransitionNotAllowedException exception, HttpServletRequest request) {
+        return error(HttpStatus.UNPROCESSABLE_ENTITY, "TRANSITION_NOT_ALLOWED", exception.getMessage(), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

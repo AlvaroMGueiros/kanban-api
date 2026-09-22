@@ -130,3 +130,16 @@ e `sort=name,asc` (repetível), com size de 1 a 100 e desempate por id.
 Há validação de entrada, erros padronizados, e-mail normalizado/único e auditoria.
 `mvnw verify` valida 4 testes de serviço e 15 de integração/API nesta etapa.
 As descrições anteriores de escopo se referem à entrega inicial da Fase 1.
+
+## Evolução: projetos e Kanban
+
+Projetos possuem datas previstas/realizadas e um ou mais responsáveis. Status,
+dias de atraso e percentual restante são derivados das datas usando a referência
+temporal configurada. A API oferece CRUD em `/api/projects`, listagem paginada por
+coluna em `/api/kanban/projects?status=...` e transição em
+`PATCH /api/kanban/projects/{id}/status`.
+
+As doze combinações entre estados diferentes são avaliadas pela mesma política de
+domínio. Efeitos automáticos alteram somente datas realizadas previstas no desafio;
+quando as datas não produzem o destino solicitado, a resposta `422` informa o que
+deve ser ajustado. O filtro de status é executado antes da paginação no PostgreSQL.

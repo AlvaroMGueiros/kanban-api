@@ -11,9 +11,9 @@ Não alterar datas nem reconstruir um histórico artificial.
 
 1. Bootstrap, PostgreSQL, Flyway e Docker mínimo — concluído e validado.
 2. Responsável: modelo, migration, CRUD, unicidade de e-mail e testes — concluído.
-3. Projeto: domínio, status e métricas com testes de limites.
-4. Projeto: persistência e CRUD com recálculo e testes.
-5. Kanban: 12 transições, mensagens específicas, atomicidade e listagem por status.
+3. Projeto: domínio, status e métricas com testes de limites — concluído.
+4. Projeto: persistência e CRUD com recálculo e testes — concluído.
+5. Kanban: 12 transições, mensagens específicas, atomicidade e listagem por status — concluído.
 6. Consolidar erros, paginação, ordenação e filtros aprovados.
 7. OpenAPI, Docker final e GitHub Actions executando `mvn verify`.
 8. Consolidar README, ADRs, coleção de API, diagrama e AI_USAGE.md.

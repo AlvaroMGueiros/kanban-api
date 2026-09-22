@@ -14,8 +14,10 @@ import br.com.alvar.kanban.domain.exception.BusinessRuleException;
 import br.com.alvar.kanban.domain.exception.ResourceNotFoundException;
 import br.com.alvar.kanban.domain.model.Project;
 import br.com.alvar.kanban.domain.model.ProjectSchedule;
+import br.com.alvar.kanban.domain.model.ProjectStatus;
 import br.com.alvar.kanban.domain.model.Responsible;
 import br.com.alvar.kanban.infrastructure.repository.ProjectRepository;
+import br.com.alvar.kanban.infrastructure.repository.ProjectSpecifications;
 import br.com.alvar.kanban.infrastructure.repository.ResponsibleRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,15 @@ public class ProjectService {
     public PageResponse<ProjectResponse> list(Pageable pageable) {
         LocalDate today = LocalDate.now(clock);
         return PageResponse.from(projectRepository.findAll(pageable).map(project -> ProjectMapper.toResponse(project, today)));
+    }
+
+    public PageResponse<ProjectResponse> listByStatus(ProjectStatus status, Pageable pageable) {
+        LocalDate today = LocalDate.now(clock);
+        if (status == null) {
+            return list(pageable);
+        }
+        return PageResponse.from(projectRepository.findAll(ProjectSpecifications.hasStatus(status, today), pageable)
+                .map(project -> ProjectMapper.toResponse(project, today)));
     }
 
     public ProjectResponse find(Long id) {
