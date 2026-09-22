@@ -3,14 +3,14 @@
 ## Processo
 
 A Fase 0 foi aprovada pelo usuário, incluindo um repositório independente chamado
-`kanban-api`. Implementar uma fase por vez, explicar o resultado e parar ao final.
+`kanban-api`. Continuar as próximas fases conforme autorização posterior do usuário, explicando e validando cada unidade.
 Cada unidade funcional recebe testes pertinentes, revisão do diff e commit próprio.
 Não alterar datas nem reconstruir um histórico artificial.
 
 ## Entregas
 
 1. Bootstrap, PostgreSQL, Flyway e Docker mínimo — concluído e validado.
-2. Responsável: modelo, migration, CRUD, unicidade de e-mail e testes.
+2. Responsável: modelo, migration, CRUD, unicidade de e-mail e testes — concluído.
 3. Projeto: domínio, status e métricas com testes de limites.
 4. Projeto: persistência e CRUD com recálculo e testes.
 5. Kanban: 12 transições, mensagens específicas, atomicidade e listagem por status.

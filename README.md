@@ -121,3 +121,12 @@ não fazem parte da Fase 1. A próxima entrega é o gerenciamento de responsáve
 
 O repositório Git é local nesta etapa. A entrega pública e os diferenciais serão
 tratados depois da validação do núcleo. Consulte o plano para os critérios de aceite.
+
+## Evolução: responsáveis
+
+A Fase 2 adiciona `POST/GET /api/responsibles` e `GET/PUT/DELETE /api/responsibles/{id}`.
+Requests usam `name`, `email`, `role` e `department`. Listagens aceitam `page`, `size`
+e `sort=name,asc` (repetível), com size de 1 a 100 e desempate por id.
+Há validação de entrada, erros padronizados, e-mail normalizado/único e auditoria.
+`mvnw verify` valida 4 testes de serviço e 15 de integração/API nesta etapa.
+As descrições anteriores de escopo se referem à entrega inicial da Fase 1.
