@@ -16,8 +16,8 @@ Não alterar datas nem reconstruir um histórico artificial.
 5. Kanban: 12 transições, mensagens específicas, atomicidade e listagem por status — concluído.
 6. Consolidar erros, paginação, ordenação e filtros aprovados — concluído.
 7. OpenAPI, Docker final e GitHub Actions executando `mvn verify` — concluído.
-8. Consolidar README, ADRs, coleção de API, diagrama e AI_USAGE.md.
-9. Somente depois do núcleo validado: diferenciais selecionados.
+8. Consolidar README, ADRs, coleção de API, diagrama e AI_USAGE.md — concluído.
+9. Somente depois do núcleo validado: indicador de projetos por status — concluído.
 
 Regras de status/métricas antecedem a conclusão do CRUD de projetos. Paginação
 básica e tratamento de erros acompanham os primeiros endpoints. Testes e registros
@@ -97,7 +97,8 @@ defini-las: não inventar um protocolo de confirmação.
 
 - POST/GET /api/responsibles; GET/PUT/DELETE /api/responsibles/{id}.
 - POST/GET /api/projects; GET/PUT/DELETE /api/projects/{id}.
-- GET /api/kanban/projects?status=... e PATCH /api/projects/{id}/status.
+- GET /api/kanban/projects?status=... e PATCH /api/kanban/projects/{id}/status.
+- GET /api/indicators/projects-by-status.
 - Paginação page/size/sort, limite de tamanho e desempate estável.
 - Erros: 400 entrada inválida; 404 inexistente; 409 conflito de unicidade/vínculo;
   422 inconsistência de datas ou transição inviável.
@@ -105,15 +106,15 @@ defini-las: não inventar um protocolo de confirmação.
 
 ## Checklist de aceite final
 
-- [ ] CRUDs, vínculos, unicidade e invariantes validados.
-- [ ] Status, métricas, nulos e limites ontem/hoje/amanhã cobertos.
-- [ ] Doze transições cobertas e rollback demonstrado.
-- [ ] Leituras refletem passagem do tempo; paginação e totais corretos.
-- [ ] Integração PostgreSQL verifica migrations, constraints e transações.
-- [ ] API verifica contratos, validações e códigos HTTP.
-- [ ] Docker, Swagger e CI validados.
-- [ ] README, ADRs, coleção e diagrama correspondem à implementação.
-- [ ] AI_USAGE descreve o processo e uma revisão humana real de sugestão da IA.
+- [x] CRUDs, vínculos, unicidade e invariantes validados.
+- [x] Status, métricas, nulos e limites ontem/hoje/amanhã cobertos.
+- [x] Doze transições cobertas e rollback demonstrado.
+- [x] Leituras refletem passagem do tempo; paginação e totais corretos.
+- [x] Integração PostgreSQL verifica migrations, constraints e transações.
+- [x] API verifica contratos, validações e códigos HTTP.
+- [x] Docker, Swagger e CI validados.
+- [x] README, ADRs, coleção e diagrama correspondem à implementação.
+- [x] AI_USAGE descreve o processo e revisões reais de sugestões da IA.
 - [ ] Entrega pública no GitHub preparada.
 
 Diferenciais possíveis: indicadores, filtros avançados, GraphQL, CRUD de Secretaria,

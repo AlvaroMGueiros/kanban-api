@@ -12,6 +12,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class KanbanApplicationIT extends ApiIntegrationTest {
 
+    @Test
+    void shouldPublishIndicatorEndpointInOpenApi() throws Exception {
+        mockMvc.perform(get("/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paths['/api/indicators/projects-by-status']").exists());
+    }
+
     @Autowired
     private Flyway flyway;
 

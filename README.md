@@ -1,163 +1,160 @@
 # Kanban API
 
-API Java para gerenciamento de projetos em um quadro Kanban, desenvolvida em
-etapas a partir do desafio técnico. A Fase 1 entrega bootstrap, banco e Docker.
-O planejamento aprovado está em [docs/implementationPlan.md](docs/implementationPlan.md).
+API REST para gerenciar responsáveis, projetos e transições de um quadro Kanban. Status e métricas temporais são derivados das datas, evitando dados persistidos que ficam desatualizados com o tempo.
 
 ## Stack
 
-- Java 21 e Spring Boot 3.5.16.
-- Maven Wrapper 3.3.4, com Maven 3.9.11.
-- Spring Web, Data JPA, Bean Validation e Actuator.
-- PostgreSQL 17.11 e Flyway, com versões das bibliotecas gerenciadas pelo Spring Boot.
-- JUnit 5, MockMvc e Testcontainers; Failsafe executa testes de integração.
+- Java 21, Spring Boot 3.5.16 e Maven Wrapper 3.9.11
+- Spring Web, Data JPA, Validation, Actuator e springdoc-openapi
+- PostgreSQL 17.11, Flyway, JUnit 5, MockMvc e Testcontainers
+- Docker Compose e GitHub Actions
 
-## Executar com Docker
+## Arquitetura
 
-Pré-requisito: Docker com Compose e engine Linux em execução.
-Na raiz do repositório:
+Monólito em camadas pragmáticas: apresentação expõe HTTP; aplicação coordena casos de uso; domínio concentra regras; infraestrutura trata persistência e configuração.
 
-```bash
-docker compose up --build
+```mermaid
+flowchart LR
+    Client[Cliente HTTP] --> Presentation
+    Presentation --> Application
+    Application --> Domain
+    Application --> Infrastructure
+    Infrastructure --> DB[(PostgreSQL)]
 ```
 
-A API responde em `http://localhost:8080/actuator/health` com `{"status":"UP"}`.
-O banco fica acessível localmente na porta `5433`, evitando o padrão `5432`
-frequentemente usado por instalações locais. A comunicação entre containers usa
-`postgres:5432`. A aplicação aguarda o healthcheck do PostgreSQL.
+Veja o [diagrama detalhado](docs/architecture.md) e os [ADRs](docs/adr).
 
-As portas, banco e credenciais locais podem ser alterados copiando `.env.example`
-para `.env`. Os valores de exemplo são exclusivos para desenvolvimento local;
-`.env` não é versionado. As portas são publicadas somente em `127.0.0.1`.
+## Estrutura de diretórios
 
-Para iniciar em segundo plano e aguardar ambos os serviços saudáveis:
-
-```bash
-docker compose up --build --wait
-docker compose ps
+```text
+src/main/java/br/com/alvar/kanban/
+├── domain/          # entidades, regras e exceções
+├── application/     # serviços, DTOs e mapeadores
+├── infrastructure/  # repositórios e configuração
+└── presentation/    # controllers, erros HTTP e paginação
+src/main/resources/db/migration/ # schema Flyway
+src/test/java/                    # testes unitários e de integração
+docs/                             # plano, ADRs, diagrama e Postman
 ```
 
-Para parar preservando os dados:
+## Modelo de domínio
 
-```bash
-docker compose down
-```
+`Responsible` possui nome, e-mail normalizado e único, cargo e secretaria. `Project` possui nome, datas previstas/realizadas e um ou mais responsáveis. A relação é N:N por `projectResponsibles`; excluir projeto preserva responsáveis e excluir responsável vinculado retorna conflito.
 
-O volume `postgresData` persiste os dados. Mudar as variáveis `POSTGRES_*` após a
-primeira inicialização não altera usuários e bancos já existentes nesse volume.
+Status, dias de atraso e percentual restante são calculados. Datas previstas podem ser nulas; quando um par existe, o término não pode anteceder o início. Datas realizadas futuras são rejeitadas.
 
-O Dockerfile usa build com JDK 21 e runtime JRE 21, executa a aplicação com usuário
-sem privilégios e verifica sua saúde por HTTP. O build da imagem empacota sem
-executar testes: a validação completa deve ocorrer antes, com `./mvnw verify`,
-pois os testes de integração precisam acessar o Docker do host.
+## Regras de status
 
-## Executar Java localmente
+Precedência:
 
-Pré-requisitos: JDK 21, `JAVA_HOME` configurado e Docker ativo para o banco.
-Não é necessário instalar Maven globalmente.
+1. `CONCLUIDO`: término realizado preenchido.
+2. `ATRASADO`: sem conclusão e início previsto vencido sem início realizado, ou término previsto vencido.
+3. `EM_ANDAMENTO`: início realizado e sem atraso.
+4. `A_INICIAR`: demais casos.
+
+O dia atual vem de `Clock`, com `America/Fortaleza` como padrão. Projeto que vence hoje ainda está em andamento. Dias de atraso contam dias corridos após o término previsto. O percentual restante usa duas casas, `HALF_UP` e limite 0..100.
+
+## Transições
+
+`PATCH /api/kanban/projects/{id}/status` recebe `targetStatus`. O serviço calcula a origem, aplica o efeito e confirma se as datas produzem o destino. Mesmo status é idempotente; incompatibilidade retorna `422` sem persistir efeitos.
+
+- Para `CONCLUIDO`, preenche término realizado com hoje.
+- De `CONCLUIDO`, remove término realizado e valida o resultado.
+- `A_INICIAR -> EM_ANDAMENTO` preenche início realizado com hoje.
+- `EM_ANDAMENTO -> A_INICIAR` remove início realizado.
+- Destinos dependentes de atraso não fabricam datas; o erro orienta o ajuste necessário.
+
+As doze combinações entre estados diferentes têm cobertura unitária.
+
+## Decisões técnicas
+
+- Status não é persistido porque pode mudar à meia-noite sem escrita.
+- Flyway altera o schema; Hibernate usa `ddl-auto=validate`.
+- Filtros rodam no PostgreSQL antes da paginação.
+- DTOs separam o contrato HTTP das entidades.
+- A data de referência é capturada uma vez por operação.
+
+Consulte [ADR 001](docs/adr/001-derivedStatusAndClock.md) e [ADR 002](docs/adr/002-relationalPersistence.md).
+
+## Execução local
+
+Pré-requisitos: JDK 21 e Docker. Maven global não é necessário.
 
 ```bash
 docker compose up -d --wait postgres
 ./mvnw spring-boot:run
 ```
 
-No PowerShell, substitua `./mvnw` por `.\mvnw.cmd`.
-A configuração local padrão é `jdbc:postgresql://localhost:5433/kanban`, usuário
-`kanban` e senha `kanbanLocal`. Para outro banco, exporte `DATABASE_URL`,
-`DATABASE_USERNAME` e `DATABASE_PASSWORD` no processo da aplicação.
-O arquivo `.env` é lido pelo Compose, não pelo Spring Boot executado diretamente.
-Não execute a API local e a API do Compose na mesma porta simultaneamente.
+No PowerShell, use `.\mvnw.cmd`. O padrão local usa `localhost:5433`, banco/usuário `kanban` e senha `kanbanLocal`. Podem ser definidos `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` e `APP_TIME_ZONE`.
 
-## Documentação da API
+## Docker
 
-Com a aplicação em execução, o Swagger UI está em
-`http://localhost:8080/swagger-ui` e o documento OpenAPI JSON em
-`http://localhost:8080/api-docs`. A especificação inclui endpoints, schemas,
-exemplos de entrada e respostas de erro.
+```bash
+docker compose up --build --wait
+docker compose ps
+docker compose down
+```
 
-## Testes e build
+A API fica em `http://localhost:8080`; o PostgreSQL, em `127.0.0.1:5433`. `.env.example` documenta opções e `.env` não é versionado. O volume `postgresData` preserva dados. A imagem usa build multi-stage, JRE 21, usuário sem privilégios e healthcheck.
+
+## Testes
 
 ```bash
 ./mvnw verify
 ```
 
-Esse comando compila, executa os testes, gera o JAR e executa a integração com
-PostgreSQL descartável via Testcontainers. Docker é obrigatório para a integração;
-a falta do engine provoca falha, sem pular testes silenciosamente.
-Nenhum banco de desenvolvimento é reutilizado pelo teste.
+Executa 70 testes unitários e 43 testes de integração/API. A integração usa PostgreSQL 17.11 descartável via Testcontainers e valida migrations, constraints, transações, filtros, paginação e contratos HTTP. Docker precisa estar ativo. Relatórios ficam em `target/surefire-reports` e `target/failsafe-reports`.
 
-A Fase 1 contém dois testes de integração: resposta HTTP de saúde e aplicação das
-migrations em banco vazio, incluindo validação de checksum e ausência de reaplicação.
-Os relatórios ficam em `target/failsafe-reports`. `./mvnw test` executará apenas
-os testes unitários, que serão introduzidos com as regras de negócio nas próximas
-etapas; sozinho, ele não valida a integração desta fase.
+## Swagger
 
-## Banco e migrations
+- UI: `http://localhost:8080/swagger-ui`
+- OpenAPI: `http://localhost:8080/api-docs`
+- Saúde: `http://localhost:8080/actuator/health`
 
-Flyway é o único responsável por alterar o schema. A primeira migration,
-`V1__createKanbanSchema.sql`, cria o schema `kanban`, destinado às tabelas de negócio.
-Seu histórico fica em `public.flyway_schema_history`, permitindo que o próprio
-schema de negócio seja criado por uma migration versionada.
+## Endpoints e exemplos
 
-Hibernate usa `ddl-auto=validate`, com schema padrão `kanban`, e não cria tabelas.
-`open-in-view=false` delimita o acesso ao banco às operações da aplicação.
-As tabelas de responsáveis e projetos serão adicionadas em migrations próprias
-nas próximas fases. Não há tabelas artificiais nem carga de dados demonstrativos.
+| Método | Rota | Função |
+| --- | --- | --- |
+| `POST`, `GET` | `/api/responsibles` | Criar e listar responsáveis |
+| `GET`, `PUT`, `DELETE` | `/api/responsibles/{id}` | Consultar, editar e excluir |
+| `POST`, `GET` | `/api/projects` | Criar e listar projetos |
+| `GET`, `PUT`, `DELETE` | `/api/projects/{id}` | Consultar, editar e excluir |
+| `GET` | `/api/kanban/projects?status=ATRASADO` | Listar uma coluna |
+| `PATCH` | `/api/kanban/projects/{id}/status` | Transicionar projeto |
+| `GET` | `/api/indicators/projects-by-status` | Contar por status |
 
-## Estrutura atual
+Listagens aceitam `page`, `size` e `sort`. Projetos também aceitam `status`, `responsibleId`, `department` e `text` combináveis.
 
-```text
-src/main/java/br/com/alvar/kanban/  # Inicialização Spring Boot
-src/main/resources/               # Configuração e migrations
-src/test/java/br/com/alvar/kanban/ # Integração HTTP/PostgreSQL
-.mvn/wrapper/                     # Maven reproduzível
-Dockerfile                       # Build e runtime Java 21
-docker-compose.yml               # Aplicação, PostgreSQL e volume
-docs/implementationPlan.md        # Plano e decisões aprovadas
-AI_USAGE.md                      # Registro contínuo do uso de IA
+```bash
+curl -X POST http://localhost:8080/api/responsibles -H "Content-Type: application/json" -d '{"name":"Ana Silva","email":"ana@example.com","role":"Gerente","department":"Planejamento"}'
+curl -X POST http://localhost:8080/api/projects -H "Content-Type: application/json" -d '{"name":"Reforma da escola","responsibleIds":[1],"plannedStartDate":"2026-10-01","plannedEndDate":"2026-12-20"}'
+curl -X PATCH http://localhost:8080/api/kanban/projects/1/status -H "Content-Type: application/json" -d '{"targetStatus":"EM_ANDAMENTO"}'
 ```
 
-As camadas de domínio, aplicação, infraestrutura e apresentação serão criadas
-conforme surgirem responsabilidades concretas; não há pacotes vazios.
+Importe a [coleção Postman](docs/api/kanban-api.postman_collection.json) para executar o fluxo completo.
 
-## Limitações e próximas etapas
+## Banco de dados
 
-Apenas `/actuator/health` está exposto pelo Actuator, sem detalhes internos.
-Autenticação, GraphQL, indicadores e observabilidade avançada permanecem fora do
-núcleo implementado.
+As migrations criam o schema `kanban`, `responsibles`, `projects`, `projectResponsibles`, constraints e índices. O histórico Flyway fica em `public.flyway_schema_history`. Auditoria usa `Instant`; cronograma usa `LocalDate`; projetos possuem versão otimista.
 
-## Integração contínua
+## Limitações
 
-O workflow `.github/workflows/ci.yml` executa `mvnw verify` com Java 21 em pushes
-para `main` e pull requests. O cache Maven é gerenciado pelo `setup-java`; os testes
-de integração usam o Docker disponível no runner para criar PostgreSQL descartável.
+- Sem autenticação/autorização e catálogo próprio de secretarias.
+- Indicador executa quatro contagens; grande volume pode pedir uma consulta agregada.
+- Métricas concluídas retornam zero e não representam atraso histórico.
+- Actuator expõe somente o healthcheck básico.
 
-O repositório Git é local nesta etapa. A entrega pública e os diferenciais serão
-tratados depois da validação do núcleo. Consulte o plano para os critérios de aceite.
+## Próximos passos
 
-## Evolução: responsáveis
+- Autenticação por perfis e auditoria de negócio.
+- CRUD de secretarias e filtros por identificador.
+- Métricas históricas, Prometheus e testes de carga.
 
-A Fase 2 adiciona `POST/GET /api/responsibles` e `GET/PUT/DELETE /api/responsibles/{id}`.
-Requests usam `name`, `email`, `role` e `department`. Listagens aceitam `page`, `size`
-e `sort=name,asc` (repetível), com size de 1 a 100 e desempate por id.
-Há validação de entrada, erros padronizados, e-mail normalizado/único e auditoria.
-`mvnw verify` valida 4 testes de serviço e 15 de integração/API nesta etapa.
-As descrições anteriores de escopo se referem à entrega inicial da Fase 1.
+## Diferenciais implementados
 
-## Evolução: projetos e Kanban
+- Filtros combináveis com paginação correta no banco.
+- Indicador de projetos por status.
+- OpenAPI com exemplos e erros; Docker com healthchecks e usuário restrito.
+- CI Java 21; regras temporais determinísticas por `Clock`; ADRs e diagramas.
 
-Projetos possuem datas previstas/realizadas e um ou mais responsáveis. Status,
-dias de atraso e percentual restante são derivados das datas usando a referência
-temporal configurada. A API oferece CRUD em `/api/projects`, listagem paginada por
-coluna em `/api/kanban/projects?status=...` e transição em
-`PATCH /api/kanban/projects/{id}/status`.
-
-As doze combinações entre estados diferentes são avaliadas pela mesma política de
-domínio. Efeitos automáticos alteram somente datas realizadas previstas no desafio;
-quando as datas não produzem o destino solicitado, a resposta `422` informa o que
-deve ser ajustado. O filtro de status é executado antes da paginação no PostgreSQL.
-
-`GET /api/projects` aceita os filtros opcionais `status`, `responsibleId`,
-`department` e `text`. Eles podem ser combinados e são aplicados antes da paginação.
-O texto pesquisa no nome do projeto sem diferenciar maiúsculas e minúsculas; `%` e
-`_` são tratados como caracteres literais.
+O processo assistido está documentado em [AI_USAGE.md](AI_USAGE.md).

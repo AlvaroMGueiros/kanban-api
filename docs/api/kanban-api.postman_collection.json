@@ -1,0 +1,45 @@
+{
+  "info": {
+    "name": "Kanban API",
+    "description": "Fluxo de criação, Kanban, transição e indicadores.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "responsibleId", "value": "1" },
+    { "key": "projectId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Criar responsável",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"name\": \"Ana Silva\",\n  \"email\": \"ana.silva@example.com\",\n  \"role\": \"Gerente de projetos\",\n  \"department\": \"Planejamento\"\n}" },
+        "url": "{{baseUrl}}/api/responsibles"
+      }
+    },
+    {
+      "name": "Criar projeto",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"name\": \"Reforma da escola\",\n  \"responsibleIds\": [{{responsibleId}}],\n  \"plannedStartDate\": \"2026-10-01\",\n  \"plannedEndDate\": \"2026-12-20\",\n  \"actualStartDate\": null,\n  \"actualEndDate\": null\n}" },
+        "url": "{{baseUrl}}/api/projects"
+      }
+    },
+    { "name": "Listar projetos", "request": { "method": "GET", "url": "{{baseUrl}}/api/projects?page=0&size=20&sort=name,asc&department=Planejamento" } },
+    { "name": "Coluna do Kanban", "request": { "method": "GET", "url": "{{baseUrl}}/api/kanban/projects?status=A_INICIAR&page=0&size=20" } },
+    {
+      "name": "Iniciar projeto",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"targetStatus\": \"EM_ANDAMENTO\"\n}" },
+        "url": "{{baseUrl}}/api/kanban/projects/{{projectId}}/status"
+      }
+    },
+    { "name": "Projetos por status", "request": { "method": "GET", "url": "{{baseUrl}}/api/indicators/projects-by-status" } },
+    { "name": "OpenAPI", "request": { "method": "GET", "url": "{{baseUrl}}/api-docs" } }
+  ]
+}
