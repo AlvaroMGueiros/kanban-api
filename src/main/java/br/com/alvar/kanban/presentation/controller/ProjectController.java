@@ -12,6 +12,7 @@ import br.com.alvar.kanban.application.service.ProjectService;
 import br.com.alvar.kanban.domain.model.ProjectStatus;
 import br.com.alvar.kanban.presentation.utils.PageRequests;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/projects")
+@Tag(name = "Projetos", description = "Cadastro, consulta, filtros e métricas derivadas de projetos")
 public class ProjectController {
     private static final Set<String> sortFields = Set.of("id", "name", "createdAt", "updatedAt");
     private final ProjectService projectService;

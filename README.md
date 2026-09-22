@@ -68,6 +68,13 @@ A configuração local padrão é `jdbc:postgresql://localhost:5433/kanban`, usu
 O arquivo `.env` é lido pelo Compose, não pelo Spring Boot executado diretamente.
 Não execute a API local e a API do Compose na mesma porta simultaneamente.
 
+## Documentação da API
+
+Com a aplicação em execução, o Swagger UI está em
+`http://localhost:8080/swagger-ui` e o documento OpenAPI JSON em
+`http://localhost:8080/api-docs`. A especificação inclui endpoints, schemas,
+exemplos de entrada e respostas de erro.
+
 ## Testes e build
 
 ```bash
@@ -116,8 +123,8 @@ conforme surgirem responsabilidades concretas; não há pacotes vazios.
 ## Limitações e próximas etapas
 
 Apenas `/actuator/health` está exposto pelo Actuator, sem detalhes internos.
-CRUD, cálculo de status, métricas de projetos, Kanban, Swagger, autenticação e CI
-não fazem parte da Fase 1. A próxima entrega é o gerenciamento de responsáveis.
+Autenticação, GraphQL, indicadores e observabilidade avançada permanecem fora do
+núcleo implementado.
 
 O repositório Git é local nesta etapa. A entrega pública e os diferenciais serão
 tratados depois da validação do núcleo. Consulte o plano para os critérios de aceite.

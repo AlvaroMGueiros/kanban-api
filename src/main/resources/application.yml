@@ -27,3 +27,11 @@ management:
   endpoint:
     health:
       show-details: never
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui
+    operations-sorter: method
+    tags-sorter: alpha

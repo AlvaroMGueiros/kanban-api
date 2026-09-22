@@ -10,6 +10,7 @@ import br.com.alvar.kanban.application.dto.ResponsibleResponse;
 import br.com.alvar.kanban.application.service.ResponsibleService;
 import br.com.alvar.kanban.presentation.utils.PageRequests;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/responsibles")
+@Tag(name = "Responsáveis", description = "Cadastro e consulta de responsáveis por projetos")
 public class ResponsibleController {
     private static final Set<String> sortFields = Set.of("id", "name", "email", "role", "department", "createdAt", "updatedAt");
     private final ResponsibleService responsibleService;

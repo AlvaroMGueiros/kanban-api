@@ -11,6 +11,7 @@ import br.com.alvar.kanban.application.service.ProjectService;
 import br.com.alvar.kanban.domain.model.ProjectStatus;
 import br.com.alvar.kanban.presentation.utils.PageRequests;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/kanban")
+@Tag(name = "Kanban", description = "Colunas e transições validadas do quadro Kanban")
 public class KanbanController {
     private static final Set<String> SORT_FIELDS = Set.of("id", "name", "createdAt", "updatedAt");
 
