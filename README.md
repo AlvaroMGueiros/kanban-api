@@ -126,6 +126,12 @@ Apenas `/actuator/health` está exposto pelo Actuator, sem detalhes internos.
 Autenticação, GraphQL, indicadores e observabilidade avançada permanecem fora do
 núcleo implementado.
 
+## Integração contínua
+
+O workflow `.github/workflows/ci.yml` executa `mvnw verify` com Java 21 em pushes
+para `main` e pull requests. O cache Maven é gerenciado pelo `setup-java`; os testes
+de integração usam o Docker disponível no runner para criar PostgreSQL descartável.
+
 O repositório Git é local nesta etapa. A entrega pública e os diferenciais serão
 tratados depois da validação do núcleo. Consulte o plano para os critérios de aceite.
 
