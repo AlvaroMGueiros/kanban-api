@@ -76,6 +76,26 @@ class KanbanApiIT extends ApiIntegrationTest {
                 .andExpect(jsonPath("$.error").value("INVALID_REQUEST"));
     }
 
+    @Test
+    void shouldCountProjectsByStatus() throws Exception {
+        long responsibleId = createResponsible("Ana", "ana@example.com");
+        createProject(new ProjectRequest("Planejado", List.of(responsibleId),
+                TODAY.plusDays(1), TODAY.plusDays(5), null, null));
+        createProject(new ProjectRequest("Executando", List.of(responsibleId),
+                TODAY, TODAY.plusDays(5), TODAY, null));
+        createProject(new ProjectRequest("Atrasado", List.of(responsibleId),
+                TODAY.minusDays(5), TODAY.minusDays(1), null, null));
+        createProject(new ProjectRequest("Finalizado", List.of(responsibleId),
+                TODAY.minusDays(5), TODAY.minusDays(1), TODAY.minusDays(4), TODAY));
+
+        mockMvc.perform(get("/api/indicators/projects-by-status"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.aIniciar").value(1))
+                .andExpect(jsonPath("$.emAndamento").value(1))
+                .andExpect(jsonPath("$.atrasado").value(1))
+                .andExpect(jsonPath("$.concluido").value(1));
+    }
+
     // -------------------------------------------------------------------------
     // A_INICIAR transitions
     // -------------------------------------------------------------------------
