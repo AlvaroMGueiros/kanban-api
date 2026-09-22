@@ -90,10 +90,10 @@ class KanbanApiIT extends ApiIntegrationTest {
 
         mockMvc.perform(get("/api/indicators/projects-by-status"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.aIniciar").value(1))
-                .andExpect(jsonPath("$.emAndamento").value(1))
-                .andExpect(jsonPath("$.atrasado").value(1))
-                .andExpect(jsonPath("$.concluido").value(1));
+                .andExpect(jsonPath("$.A_INICIAR").value(1))
+                .andExpect(jsonPath("$.EM_ANDAMENTO").value(1))
+                .andExpect(jsonPath("$.ATRASADO").value(1))
+                .andExpect(jsonPath("$.CONCLUIDO").value(1));
     }
 
     // -------------------------------------------------------------------------
