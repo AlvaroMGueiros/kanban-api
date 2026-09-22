@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.Set;
 
 import br.com.alvar.kanban.application.dto.PageResponse;
+import br.com.alvar.kanban.application.dto.ProjectFilters;
 import br.com.alvar.kanban.application.dto.ProjectRequest;
 import br.com.alvar.kanban.application.dto.ProjectResponse;
 import br.com.alvar.kanban.application.service.ProjectService;
+import br.com.alvar.kanban.domain.model.ProjectStatus;
 import br.com.alvar.kanban.presentation.utils.PageRequests;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -41,8 +43,13 @@ public class ProjectController {
     @GetMapping
     public PageResponse<ProjectResponse> list(@RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "20") int size,
+                                            @RequestParam(required = false) ProjectStatus status,
+                                            @RequestParam(required = false) Long responsibleId,
+                                            @RequestParam(required = false) String department,
+                                            @RequestParam(required = false) String text,
                                             @RequestParam MultiValueMap<String, String> parameters) {
-        return projectService.list(PageRequests.create(page, size,
+        return projectService.list(new ProjectFilters(status, responsibleId, department, text),
+                PageRequests.create(page, size,
                 parameters.getOrDefault("sort", List.of("id,asc")), sortFields));
     }
 

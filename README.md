@@ -143,3 +143,8 @@ As doze combinações entre estados diferentes são avaliadas pela mesma políti
 domínio. Efeitos automáticos alteram somente datas realizadas previstas no desafio;
 quando as datas não produzem o destino solicitado, a resposta `422` informa o que
 deve ser ajustado. O filtro de status é executado antes da paginação no PostgreSQL.
+
+`GET /api/projects` aceita os filtros opcionais `status`, `responsibleId`,
+`department` e `text`. Eles podem ser combinados e são aplicados antes da paginação.
+O texto pesquisa no nome do projeto sem diferenciar maiúsculas e minúsculas; `%` e
+`_` são tratados como caracteres literais.

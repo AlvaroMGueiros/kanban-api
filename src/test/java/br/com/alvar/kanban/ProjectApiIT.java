@@ -108,4 +108,39 @@ class ProjectApiIT extends ApiIntegrationTest {
         assertThat(project.delayDays()).isZero();
         assertThat(project.remainingTimePercentage()).isZero();
     }
+
+    @Test
+    void shouldCombineProjectFiltersBeforePagination() throws Exception {
+        long planningId = createResponsible("Ana", "ana@example.com");
+        long worksId = createResponsible("Bia", "bia@example.com");
+        jdbcTemplate.update("UPDATE kanban.responsibles SET department = 'Obras' WHERE id = ?", worksId);
+        createProject(new ProjectRequest("Reforma da escola", List.of(planningId),
+                today.minusDays(2), today.minusDays(1), null, null));
+        createProject(new ProjectRequest("Reforma da praça", List.of(worksId),
+                today.minusDays(2), today.minusDays(1), null, null));
+        createProject(new ProjectRequest("Projeto futuro", List.of(worksId),
+                today.plusDays(1), today.plusDays(2), null, null));
+
+        mockMvc.perform(get("/api/projects")
+                        .param("status", "ATRASADO")
+                        .param("responsibleId", Long.toString(worksId))
+                        .param("department", "obras")
+                        .param("text", "PRAÇA")
+                        .param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].name").value("Reforma da praça"))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void shouldTreatLikeWildcardsAsLiteralText() throws Exception {
+        long responsibleId = createResponsible("Ana", "ana@example.com");
+        createProject(new ProjectRequest("Projeto 100%", List.of(responsibleId), null, null, null, null));
+        createProject(new ProjectRequest("Projeto comum", List.of(responsibleId), null, null, null, null));
+
+        mockMvc.perform(get("/api/projects").param("text", "%"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Projeto 100%"));
+    }
 }

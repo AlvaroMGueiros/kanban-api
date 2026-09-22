@@ -14,7 +14,7 @@ Não alterar datas nem reconstruir um histórico artificial.
 3. Projeto: domínio, status e métricas com testes de limites — concluído.
 4. Projeto: persistência e CRUD com recálculo e testes — concluído.
 5. Kanban: 12 transições, mensagens específicas, atomicidade e listagem por status — concluído.
-6. Consolidar erros, paginação, ordenação e filtros aprovados.
+6. Consolidar erros, paginação, ordenação e filtros aprovados — concluído.
 7. OpenAPI, Docker final e GitHub Actions executando `mvn verify`.
 8. Consolidar README, ADRs, coleção de API, diagrama e AI_USAGE.md.
 9. Somente depois do núcleo validado: diferenciais selecionados.

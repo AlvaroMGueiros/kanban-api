@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import br.com.alvar.kanban.application.dto.PageResponse;
+import br.com.alvar.kanban.application.dto.ProjectFilters;
 import br.com.alvar.kanban.application.dto.ProjectRequest;
 import br.com.alvar.kanban.application.dto.ProjectResponse;
 import br.com.alvar.kanban.application.mapper.ProjectMapper;
@@ -37,17 +38,17 @@ public class ProjectService {
     }
 
     public PageResponse<ProjectResponse> list(Pageable pageable) {
+        return list(ProjectFilters.empty(), pageable);
+    }
+
+    public PageResponse<ProjectResponse> list(ProjectFilters filters, Pageable pageable) {
         LocalDate today = LocalDate.now(clock);
-        return PageResponse.from(projectRepository.findAll(pageable).map(project -> ProjectMapper.toResponse(project, today)));
+        return PageResponse.from(projectRepository.findAll(ProjectSpecifications.withFilters(filters, today), pageable)
+                .map(project -> ProjectMapper.toResponse(project, today)));
     }
 
     public PageResponse<ProjectResponse> listByStatus(ProjectStatus status, Pageable pageable) {
-        LocalDate today = LocalDate.now(clock);
-        if (status == null) {
-            return list(pageable);
-        }
-        return PageResponse.from(projectRepository.findAll(ProjectSpecifications.hasStatus(status, today), pageable)
-                .map(project -> ProjectMapper.toResponse(project, today)));
+        return list(new ProjectFilters(status, null, null, null), pageable);
     }
 
     public ProjectResponse find(Long id) {
