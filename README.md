@@ -5,7 +5,7 @@ API REST para gerenciar responsáveis, projetos e transições de um quadro Kanb
 ## Stack
 
 - Java 21, Spring Boot 3.5.16 e Maven Wrapper 3.9.11
-- Spring Web, Data JPA, Validation, Actuator e springdoc-openapi
+- Spring Web, Data JPA, Validation, Actuator, Micrometer Prometheus e springdoc-openapi
 - PostgreSQL 17.11, Flyway, JUnit 5, MockMvc e Testcontainers
 - Docker Compose e GitHub Actions
 
@@ -88,6 +88,18 @@ docker compose up -d --wait postgres
 
 No PowerShell, use `.\mvnw.cmd`. O padrão local usa `localhost:5433`, banco/usuário `kanban` e senha `kanbanLocal`. Podem ser definidos `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD` e `APP_TIME_ZONE`.
 
+### Interface React
+
+Com a API em execução, inicie a interface em outro terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Acesse `http://localhost:5173`. O proxy de desenvolvimento encaminha `/api` e `/actuator` para `http://localhost:8080`. A tela consulta cada coluna do Kanban com paginação, permite transições por drag-and-drop ou seletor e apresenta a mensagem devolvida pela API quando uma regra impede o movimento.
+
 ## Docker
 
 ```bash
@@ -104,13 +116,16 @@ A API fica em `http://localhost:8080`; o PostgreSQL, em `127.0.0.1:5433`. `.env.
 ./mvnw verify
 ```
 
-Executa 71 testes unitários e 44 testes de integração/API. A integração usa PostgreSQL 17.11 descartável via Testcontainers e valida migrations, constraints, transações, filtros, paginação e contratos HTTP. Docker precisa estar ativo. Relatórios ficam em `target/surefire-reports` e `target/failsafe-reports`.
+Executa 71 testes unitários e 45 testes de integração/API. A integração usa PostgreSQL 17.11 descartável via Testcontainers e valida migrations, constraints, transações, filtros, paginação, observabilidade e contratos HTTP. Docker precisa estar ativo. Relatórios ficam em `target/surefire-reports` e `target/failsafe-reports`.
 
 ## Swagger
 
 - UI: `http://localhost:8080/swagger-ui`
 - OpenAPI: `http://localhost:8080/api-docs`
 - Saúde: `http://localhost:8080/actuator/health`
+- Métricas Prometheus: `http://localhost:8080/actuator/prometheus`
+
+O endpoint Prometheus publica métricas HTTP, JVM, processo, pool de conexões e banco com a tag `application="kanban-api"`. Uma instalação externa do Prometheus pode coletar essa rota e o Grafana pode usar o Prometheus como fonte de dados. Somente `health` e `prometheus` são expostos pelo Actuator; detalhes internos de saúde permanecem ocultos.
 
 ## Endpoints e exemplos
 
@@ -143,19 +158,21 @@ As migrations criam o schema `kanban`, `responsibles`, `projects`, `projectRespo
 - Sem autenticação/autorização e catálogo próprio de secretarias.
 - Indicador executa quatro contagens; grande volume pode pedir uma consulta agregada.
 - Métricas concluídas retornam zero e não representam atraso histórico.
-- Actuator expõe somente o healthcheck básico.
+- Prometheus e Grafana não são orquestrados pelo Compose; a API apenas disponibiliza o endpoint de coleta para integração com a plataforma de observabilidade do ambiente.
 
 ## Próximos passos
 
 - Autenticação por perfis e auditoria de negócio.
 - CRUD de secretarias e filtros por identificador.
-- Métricas históricas, Prometheus e testes de carga.
+- Métricas de negócio, dashboards Grafana e testes de carga.
 
 ## Diferenciais implementados
 
 - Filtros combináveis com paginação correta no banco.
 - Indicador de projetos por status.
 - OpenAPI com exemplos e erros; Docker com healthchecks e usuário restrito.
+- Actuator com saúde protegida contra detalhes internos e métricas no formato Prometheus.
+- Interface React responsiva para consulta e movimentação do Kanban por drag-and-drop, inspirada na identidade visual institucional do projeto Sisters.
 - CI Java 21; regras temporais determinísticas por `Clock`; ADRs e diagramas.
 - Proposta arquitetural de assistente de projetos com contexto controlado, RAG opcional, resiliência, segurança, avaliação e trade-offs documentados no [ADR 003](docs/adr/003-ai-project-assistant.md).
 

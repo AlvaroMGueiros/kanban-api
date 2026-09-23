@@ -1,0 +1,442 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--color-background);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+button,
+[draggable="true"],
+select {
+  cursor: pointer;
+}
+
+.app-shell {
+  min-height: 100vh;
+  color: var(--color-text);
+  background: var(--color-background);
+}
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 10;
+  width: 248px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 30px 24px;
+  color: var(--color-surface);
+  background: var(--color-primary-strong);
+}
+
+.brand-mark {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--color-primary-strong);
+  background: var(--color-surface);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.sidebar strong,
+.sidebar span {
+  display: block;
+}
+
+.sidebar strong {
+  margin-top: 1px;
+  font-size: 18px;
+}
+
+.sidebar span {
+  margin-top: 3px;
+  color: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  font-size: 12px;
+}
+
+main {
+  min-height: 100vh;
+  margin-left: 248px;
+  padding: 38px 32px 48px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 1600px;
+  margin: 0 auto 28px;
+}
+
+.eyebrow {
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+h1 {
+  margin: 7px 0 4px;
+  color: var(--color-primary-strong);
+  font-size: clamp(26px, 3vw, 36px);
+  letter-spacing: -0.035em;
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.refresh-button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 10px;
+  color: var(--color-surface);
+  background: var(--color-primary);
+  font-weight: 700;
+  box-shadow: 0 8px 20px var(--color-shadow);
+}
+
+.refresh-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.alert,
+.loading-state {
+  max-width: 1600px;
+  margin: 0 auto 20px;
+  border: 1px solid;
+  border-radius: 12px;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 16px;
+  font-size: 14px;
+}
+
+.alert--danger {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+.alert--success {
+  border-color: var(--color-success);
+  color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.alert button {
+  border: 0;
+  color: currentColor;
+  background: transparent;
+  font-size: 22px;
+}
+
+.loading-state {
+  padding: 40px;
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(260px, 1fr));
+  gap: 16px;
+  max-width: 1600px;
+  margin: auto;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.kanban-column {
+  min-height: 560px;
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--column-color);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--column-soft) 42%, var(--color-surface));
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.kanban-column--neutral {
+  --column-color: var(--color-text-muted);
+  --column-soft: var(--color-background);
+}
+
+.kanban-column--info {
+  --column-color: var(--color-primary);
+  --column-soft: var(--color-primary-soft);
+}
+
+.kanban-column--danger {
+  --column-color: var(--color-danger);
+  --column-soft: var(--color-danger-soft);
+}
+
+.kanban-column--success {
+  --column-color: var(--color-success);
+  --column-soft: var(--color-success-soft);
+}
+
+.kanban-column--drag-over {
+  border-color: var(--column-color);
+  transform: translateY(-3px);
+}
+
+.kanban-column__header {
+  padding: 17px 16px 13px;
+}
+
+.kanban-column__title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kanban-column h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.kanban-column__header p {
+  margin: 5px 0 0 18px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--column-color);
+}
+
+.count-badge {
+  min-width: 24px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: var(--column-color);
+  background: var(--color-surface);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.kanban-column__content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 11px 12px;
+}
+
+.empty-column {
+  display: grid;
+  min-height: 110px;
+  place-items: center;
+  padding: 18px;
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.project-card {
+  padding: 15px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  box-shadow: 0 5px 14px var(--color-shadow);
+  transition: opacity 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.project-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 22px var(--color-shadow);
+}
+
+.project-card--moving {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.project-card__header,
+.progress-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.project-card__id {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.delay-badge {
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.project-card h3 {
+  margin: 10px 0 4px;
+  color: var(--color-primary-strong);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.project-card__department {
+  margin: 0 0 13px;
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.project-card__details {
+  display: grid;
+  gap: 9px;
+  margin: 0 0 13px;
+}
+
+.project-card__details div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.project-card dt,
+.project-card dd,
+.progress-row {
+  font-size: 11px;
+}
+
+.project-card dt {
+  color: var(--color-text-muted);
+}
+
+.project-card dd {
+  max-width: 62%;
+  margin: 0;
+  font-weight: 650;
+  text-align: right;
+}
+
+.progress-row {
+  color: var(--color-text-muted);
+}
+
+.progress-row strong {
+  color: var(--color-text);
+}
+
+.progress-track {
+  height: 5px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-border);
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-secondary);
+}
+
+.move-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.move-control select {
+  max-width: 140px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  color: var(--color-text);
+  background: var(--color-surface);
+  font-size: 11px;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    position: static;
+    width: 100%;
+    height: 74px;
+    align-items: center;
+    padding: 15px 20px;
+  }
+
+  main {
+    margin-left: 0;
+    padding: 26px 18px 40px;
+  }
+
+  .kanban-board {
+    grid-template-columns: repeat(4, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .page-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .refresh-button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
