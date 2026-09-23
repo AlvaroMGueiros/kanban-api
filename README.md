@@ -104,7 +104,7 @@ A API fica em `http://localhost:8080`; o PostgreSQL, em `127.0.0.1:5433`. `.env.
 ./mvnw verify
 ```
 
-Executa 70 testes unitários e 44 testes de integração/API. A integração usa PostgreSQL 17.11 descartável via Testcontainers e valida migrations, constraints, transações, filtros, paginação e contratos HTTP. Docker precisa estar ativo. Relatórios ficam em `target/surefire-reports` e `target/failsafe-reports`.
+Executa 71 testes unitários e 44 testes de integração/API. A integração usa PostgreSQL 17.11 descartável via Testcontainers e valida migrations, constraints, transações, filtros, paginação e contratos HTTP. Docker precisa estar ativo. Relatórios ficam em `target/surefire-reports` e `target/failsafe-reports`.
 
 ## Swagger
 

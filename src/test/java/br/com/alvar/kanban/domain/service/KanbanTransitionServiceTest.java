@@ -71,6 +71,14 @@ class KanbanTransitionServiceTest {
     }
 
     @Test
+    void aIniciar_toEmAndamento_requiresPlannedEnd() {
+        assertThatThrownBy(() -> KanbanTransitionService.transition(
+                ProjectSchedule.empty(), ProjectStatus.EM_ANDAMENTO, TODAY))
+                .isInstanceOf(TransitionNotAllowedException.class)
+                .hasMessageContaining("informe 'terminoPrevisto'");
+    }
+
+    @Test
     void aIniciar_toAtrasado_succeedsWhenStartAlreadyOverdue() {
         // plannedStart in the past, no actualStart → project is already ATRASADO
         ProjectSchedule schedule = new ProjectSchedule(YESTERDAY, TOMORROW, null, null);
@@ -133,6 +141,7 @@ class KanbanTransitionServiceTest {
         ProjectSchedule schedule = new ProjectSchedule(YESTERDAY, TOMORROW, TODAY, null);
         assertThatThrownBy(() -> KanbanTransitionService.transition(schedule, ProjectStatus.ATRASADO, TODAY))
                 .isInstanceOf(TransitionNotAllowedException.class)
+                .hasMessageContaining("inicioRealizado")
                 .hasMessageContaining("terminoPrevisto");
     }
 
@@ -155,6 +164,7 @@ class KanbanTransitionServiceTest {
         ProjectSchedule schedule = new ProjectSchedule(YESTERDAY, TOMORROW, null, null);
         assertThatThrownBy(() -> KanbanTransitionService.transition(schedule, ProjectStatus.A_INICIAR, TODAY))
                 .isInstanceOf(TransitionNotAllowedException.class)
+                .hasMessageContaining("inicioRealizado")
                 .hasMessageContaining("inicioPrevisto");
     }
 
@@ -163,7 +173,8 @@ class KanbanTransitionServiceTest {
         ProjectSchedule schedule = new ProjectSchedule(YESTERDAY, YESTERDAY, null, null);
         assertThatThrownBy(() -> KanbanTransitionService.transition(schedule, ProjectStatus.EM_ANDAMENTO, TODAY))
                 .isInstanceOf(TransitionNotAllowedException.class)
-                .hasMessageContaining("inicioRealizado");
+                .hasMessageContaining("inicioRealizado")
+                .hasMessageContaining("terminoPrevisto");
     }
 
     @Test

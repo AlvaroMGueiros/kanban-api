@@ -30,10 +30,13 @@ public final class KanbanTransitionService {
             ProjectSchedule schedule, ProjectStatus target, LocalDate today) {
         return switch (target) {
             case EM_ANDAMENTO -> {
+                if (schedule.getPlannedEndDate() == null) {
+                    throw new TransitionNotAllowedException(
+                            "Para iniciar o projeto, informe 'terminoPrevisto' para hoje ou depois.");
+                }
                 ProjectSchedule updated = schedule.withActualStartDate(today);
                 requireStatus(updated, ProjectStatus.EM_ANDAMENTO, today,
-                        "Para iniciar o projeto, o término previsto deve ser posterior a hoje "
-                        + "ou estar sem data de término prevista.");
+                        "Para iniciar o projeto, ajuste 'terminoPrevisto' para hoje ou depois.");
                 yield updated;
             }
             case ATRASADO -> {
@@ -65,8 +68,8 @@ public final class KanbanTransitionService {
             }
             case ATRASADO -> {
                 requireStatus(schedule, ProjectStatus.ATRASADO, today,
-                        "O projeto não está atrasado. Para forçar o status ATRASADO, ajuste "
-                        + "'terminoPrevisto' para antes de hoje.");
+                        "O projeto não está atrasado. Remova 'inicioRealizado' para permitir atraso "
+                        + "por início ou ajuste 'inicioPrevisto'/'terminoPrevisto' para antes de hoje.");
                 yield schedule;
             }
             case CONCLUIDO -> {
@@ -85,15 +88,15 @@ public final class KanbanTransitionService {
         return switch (target) {
             case A_INICIAR -> {
                 requireStatus(schedule, ProjectStatus.A_INICIAR, today,
-                        "O projeto ainda está atrasado com as datas atuais. Ajuste 'inicioPrevisto' "
-                        + "para hoje ou depois e 'terminoPrevisto' para hoje ou depois para que "
-                        + "o status seja A_INICIAR.");
+                        "O projeto ainda está atrasado. Remova 'inicioRealizado', se preenchido, "
+                        + "e ajuste 'inicioPrevisto' e 'terminoPrevisto' para depois de hoje.");
                 yield schedule;
             }
             case EM_ANDAMENTO -> {
                 requireStatus(schedule, ProjectStatus.EM_ANDAMENTO, today,
-                        "O projeto não pode ficar EM_ANDAMENTO com as datas atuais. Verifique se "
-                        + "'inicioRealizado' está preenchido e 'terminoPrevisto' é hoje ou depois.");
+                        "O projeto não pode ficar EM_ANDAMENTO com as datas atuais. Preencha "
+                        + "'inicioRealizado' e ajuste 'inicioPrevisto' e 'terminoPrevisto' para "
+                        + "hoje ou depois.");
                 yield schedule;
             }
             case CONCLUIDO -> {
