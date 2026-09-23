@@ -32,17 +32,19 @@ public final class KanbanTransitionService {
             case EM_ANDAMENTO -> {
                 if (schedule.getPlannedEndDate() == null) {
                     throw new TransitionNotAllowedException(
-                            "Para iniciar o projeto, informe 'terminoPrevisto' para hoje ou depois.");
+                            "Não é possível iniciar este projeto porque o término previsto não foi informado. "
+                            + "Abra Editar, informe um término previsto para hoje ou uma data futura e tente novamente.");
                 }
                 ProjectSchedule updated = schedule.withActualStartDate(today);
                 requireStatus(updated, ProjectStatus.EM_ANDAMENTO, today,
-                        "Para iniciar o projeto, ajuste 'terminoPrevisto' para hoje ou depois.");
+                        "Não é possível iniciar este projeto porque o prazo previsto já venceu. "
+                        + "Abra Editar, ajuste o término previsto para hoje ou uma data futura e tente novamente.");
                 yield updated;
             }
             case ATRASADO -> {
                 requireStatus(schedule, ProjectStatus.ATRASADO, today,
-                        "O projeto não está atrasado. Ajuste 'inicioPrevisto' para antes de hoje "
-                        + "ou 'terminoPrevisto' para antes de hoje para que o status fique ATRASADO.");
+                        "Este projeto ainda está dentro do prazo e não pode ser movido para Atrasado. "
+                        + "O início ou o término previsto precisa ser anterior a hoje.");
                 yield schedule;
             }
             case CONCLUIDO -> {
@@ -62,14 +64,14 @@ public final class KanbanTransitionService {
             case A_INICIAR -> {
                 ProjectSchedule updated = schedule.withActualStartDate(null);
                 requireStatus(updated, ProjectStatus.A_INICIAR, today,
-                        "Ao remover o início realizado, o projeto ficaria ATRASADO. "
-                        + "Ajuste 'inicioPrevisto' e 'terminoPrevisto' antes de retornar a A_INICIAR.");
+                        "Não é possível retornar para A iniciar porque o projeto continuaria atrasado. "
+                        + "Abra Editar e ajuste as datas previstas para datas futuras.");
                 yield updated;
             }
             case ATRASADO -> {
                 requireStatus(schedule, ProjectStatus.ATRASADO, today,
-                        "O projeto não está atrasado. Remova 'inicioRealizado' para permitir atraso "
-                        + "por início ou ajuste 'inicioPrevisto'/'terminoPrevisto' para antes de hoje.");
+                        "Este projeto ainda está dentro do prazo e não pode ser movido para Atrasado. "
+                        + "Abra Editar e ajuste o início ou o término previsto para uma data anterior a hoje.");
                 yield schedule;
             }
             case CONCLUIDO -> {
@@ -88,15 +90,15 @@ public final class KanbanTransitionService {
         return switch (target) {
             case A_INICIAR -> {
                 requireStatus(schedule, ProjectStatus.A_INICIAR, today,
-                        "O projeto ainda está atrasado. Remova 'inicioRealizado', se preenchido, "
-                        + "e ajuste 'inicioPrevisto' e 'terminoPrevisto' para depois de hoje.");
+                        "Não é possível mover para A iniciar porque as datas ainda indicam atraso. "
+                        + "Abra Editar, remova o início realizado e ajuste as datas previstas para datas futuras.");
                 yield schedule;
             }
             case EM_ANDAMENTO -> {
                 requireStatus(schedule, ProjectStatus.EM_ANDAMENTO, today,
-                        "O projeto não pode ficar EM_ANDAMENTO com as datas atuais. Preencha "
-                        + "'inicioRealizado' e ajuste 'inicioPrevisto' e 'terminoPrevisto' para "
-                        + "hoje ou depois.");
+                        "Não é possível mover para Em andamento porque as datas ainda indicam atraso. "
+                        + "Abra Editar, informe o início realizado e ajuste o término previsto para hoje "
+                        + "ou uma data futura.");
                 yield schedule;
             }
             case CONCLUIDO -> {
@@ -115,23 +117,23 @@ public final class KanbanTransitionService {
         return switch (target) {
             case A_INICIAR -> {
                 throw new TransitionNotAllowedException(
-                        "Para retornar a A_INICIAR, remova 'terminoRealizado' pela edição do projeto, "
-                        + "mantenha 'inicioRealizado' vazio e ajuste 'inicioPrevisto' e "
-                        + "'terminoPrevisto' para depois de hoje.");
+                        "Não é possível mover um projeto concluído diretamente para A iniciar. "
+                        + "Abra Editar, remova o término e o início realizados e ajuste as datas previstas "
+                        + "para datas futuras.");
             }
             case EM_ANDAMENTO -> {
                 ProjectSchedule updated = schedule.withActualEndDate(null);
                 requireStatus(updated, ProjectStatus.EM_ANDAMENTO, today,
-                        "Ao reabrir o projeto, ele ficaria ATRASADO com as datas atuais. "
-                        + "Ajuste 'terminoPrevisto' para hoje ou depois antes de retornar a EM_ANDAMENTO.");
+                        "Não é possível reabrir em Em andamento porque o prazo previsto já venceu. "
+                        + "Abra Editar, ajuste o término previsto para hoje ou uma data futura e tente novamente.");
                 yield updated;
             }
             case ATRASADO -> {
                 ProjectSchedule updated = schedule.withActualEndDate(null);
                 requireStatus(updated, ProjectStatus.ATRASADO, today,
-                        "Ao reabrir o projeto, ele não ficaria ATRASADO com as datas atuais. "
-                        + "Ajuste 'terminoPrevisto' para antes de hoje ou 'inicioPrevisto' para antes "
-                        + "de hoje (sem 'inicioRealizado') para que o status seja ATRASADO.");
+                        "Não é possível reabrir como Atrasado porque as datas ainda estão dentro do prazo. "
+                        + "Abra Editar e informe um término previsto anterior a hoje ou remova o início realizado "
+                        + "e informe um início previsto anterior a hoje.");
                 yield updated;
             }
             default -> throw new TransitionNotAllowedException(

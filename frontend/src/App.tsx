@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from 'react';
 import { Alert } from './components/Alert';
+import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
 import { KanbanColumn } from './components/KanbanColumn';
 import { ProjectFormModal } from './components/ProjectFormModal';
 import { useKanbanBoard } from './hooks/useKanbanBoard';
@@ -48,6 +49,8 @@ export default function App() {
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [formErrorMessage, setFormErrorMessage] = useState<string | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function openProjectForm(project: Project | null) {
     setEditingProject(project);
@@ -79,17 +82,20 @@ export default function App() {
     }
   }
 
-  async function removeProject(project: Project) {
-    const confirmed = window.confirm(`Excluir o projeto “${project.name}”? Esta ação não pode ser desfeita.`);
-    if (!confirmed) {
+  async function confirmProjectDeletion() {
+    if (!projectToDelete) {
       return;
     }
+    setDeleting(true);
     try {
-      await deleteProject(project.id);
+      await deleteProject(projectToDelete.id);
       await loadProjects();
-      showSuccess(`Projeto “${project.name}” excluído com sucesso.`);
+      showSuccess(`Projeto “${projectToDelete.name}” excluído com sucesso.`);
+      setProjectToDelete(null);
     } catch (error) {
       showError(error instanceof Error ? error.message : 'Não foi possível excluir o projeto.');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -141,7 +147,7 @@ export default function App() {
                 }}
                 onMove={(project, targetStatus) => void moveProject(project, targetStatus)}
                 onEdit={(project) => void openProjectForm(project)}
-                onDelete={(project) => void removeProject(project)}
+                onDelete={setProjectToDelete}
               />
             ))}
           </div>
@@ -155,6 +161,14 @@ export default function App() {
           errorMessage={formErrorMessage}
           onClose={() => setFormOpen(false)}
           onSubmit={(request) => void saveProject(request)}
+        />
+      )}
+      {projectToDelete && (
+        <ConfirmDeleteModal
+          project={projectToDelete}
+          deleting={deleting}
+          onCancel={() => setProjectToDelete(null)}
+          onConfirm={() => void confirmProjectDeletion()}
         />
       )}
     </div>

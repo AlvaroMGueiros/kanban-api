@@ -235,7 +235,7 @@ class KanbanApiIT extends ApiIntegrationTest {
                         .content(objectMapper.writeValueAsString(new TransitionRequest(ProjectStatus.A_INICIAR))))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.error").value("TRANSITION_NOT_ALLOWED"))
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("inicioPrevisto")));
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("datas previstas")));
     }
 
     // -------------------------------------------------------------------------
@@ -252,7 +252,7 @@ class KanbanApiIT extends ApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new TransitionRequest(ProjectStatus.A_INICIAR))))
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("terminoRealizado")));
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("término e o início realizados")));
 
         mockMvc.perform(get("/api/projects/" + project.id()))
                 .andExpect(status().isOk())
