@@ -29,7 +29,35 @@ export function ProjectCard({ project, moving, onDragStart, onMove, onEdit, onDe
     >
       <div className="project-card__header">
         <span className="project-card__id">#{project.id}</span>
-        {project.delayDays > 0 && <span className="delay-badge">{project.delayDays}d em atraso</span>}
+        <div className="project-card__header-actions">
+          {project.delayDays > 0 && <span className="delay-badge">{project.delayDays}d em atraso</span>}
+          <details className="project-menu">
+            <summary aria-label={`Abrir opções do projeto ${project.name}`} title="Opções">•••</summary>
+            <div className="project-menu__options">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.currentTarget.closest('details')?.removeAttribute('open');
+                  onEdit(project);
+                }}
+                disabled={moving}
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                className="delete-button"
+                onClick={(event) => {
+                  event.currentTarget.closest('details')?.removeAttribute('open');
+                  onDelete(project);
+                }}
+                disabled={moving}
+              >
+                Excluir
+              </button>
+            </div>
+          </details>
+        </div>
       </div>
       <h3>{project.name}</h3>
       <p className="project-card__department">{department}</p>
@@ -62,10 +90,6 @@ export function ProjectCard({ project, moving, onDragStart, onMove, onEdit, onDe
           ))}
         </select>
       </label>
-      <div className="project-actions">
-        <button type="button" onClick={() => onEdit(project)} disabled={moving}>Editar</button>
-        <button type="button" className="delete-button" onClick={() => onDelete(project)} disabled={moving}>Excluir</button>
-      </div>
     </article>
   );
 }

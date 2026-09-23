@@ -413,26 +413,80 @@ h1 {
   font-size: 11px;
 }
 
-.project-actions {
+.project-card__header-actions {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: 8px;
-  margin-top: 10px;
 }
 
-.project-actions button {
-  padding: 6px 9px;
+.project-menu {
+  position: relative;
+}
+
+.project-menu summary {
+  display: grid;
+  width: 30px;
+  height: 28px;
+  place-items: center;
   border: 1px solid var(--color-border);
   border-radius: 7px;
   color: var(--color-primary-strong);
   background: var(--color-surface);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  line-height: 1;
+  list-style: none;
+  cursor: pointer;
 }
 
-.project-actions .delete-button {
-  border-color: var(--color-danger-soft);
+.project-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.project-menu[open] summary {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.project-menu__options {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 5;
+  display: grid;
+  min-width: 126px;
+  padding: 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  background: var(--color-surface);
+  box-shadow: 0 10px 28px var(--color-shadow);
+}
+
+.project-menu__options button {
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 6px;
+  color: var(--color-text);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.project-menu__options button:hover {
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.project-menu__options .delete-button {
   color: var(--color-danger);
+}
+
+.project-menu__options .delete-button:hover {
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
 }
 
 .modal-backdrop {
