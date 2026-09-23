@@ -10,6 +10,8 @@ import br.com.alvar.kanban.application.dto.ResponsibleResponse;
 import br.com.alvar.kanban.application.service.ResponsibleService;
 import br.com.alvar.kanban.presentation.utils.PageRequests;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -41,8 +43,12 @@ public class ResponsibleController {
     }
 
     @GetMapping
+    @Operation(parameters = @Parameter(name = "sort",
+            description = "Ordenação no formato campo,direção; pode ser repetido",
+            example = "name,asc"))
     public PageResponse<ResponsibleResponse> list(@RequestParam(defaultValue = "0") int page,
                                                 @RequestParam(defaultValue = "20") int size,
+                                                @Parameter(hidden = true)
                                                 @RequestParam MultiValueMap<String, String> parameters) {
         return responsibleService.list(PageRequests.create(page, size,
                 parameters.getOrDefault("sort", List.of("id,asc")), sortFields));

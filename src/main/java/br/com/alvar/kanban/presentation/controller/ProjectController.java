@@ -12,6 +12,8 @@ import br.com.alvar.kanban.application.service.ProjectService;
 import br.com.alvar.kanban.domain.model.ProjectStatus;
 import br.com.alvar.kanban.presentation.utils.PageRequests;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -43,12 +45,16 @@ public class ProjectController {
     }
 
     @GetMapping
+    @Operation(parameters = @Parameter(name = "sort",
+            description = "Ordenação no formato campo,direção; pode ser repetido",
+            example = "name,asc"))
     public PageResponse<ProjectResponse> list(@RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "20") int size,
                                             @RequestParam(required = false) ProjectStatus status,
                                             @RequestParam(required = false) Long responsibleId,
                                             @RequestParam(required = false) String department,
                                             @RequestParam(required = false) String text,
+                                            @Parameter(hidden = true)
                                             @RequestParam MultiValueMap<String, String> parameters) {
         return projectService.list(new ProjectFilters(status, responsibleId, department, text),
                 PageRequests.create(page, size,
