@@ -1,4 +1,11 @@
-import type { ApiError, PageResponse, Project, ProjectStatus } from '../types/project';
+import type {
+  ApiError,
+  PageResponse,
+  Project,
+  ProjectRequest,
+  ProjectStatus,
+  Responsible,
+} from '../types/project';
 
 const pageSize = 100;
 
@@ -43,4 +50,53 @@ export async function transitionProject(projectId: number, targetStatus: Project
     body: JSON.stringify({ targetStatus }),
   });
   return readResponse<Project>(response);
+}
+
+async function getResponsiblePage(page: number): Promise<PageResponse<Responsible>> {
+  const parameters = new URLSearchParams({
+    page: String(page),
+    size: String(pageSize),
+    sort: 'name,asc',
+  });
+  const response = await fetch(`/api/responsibles?${parameters.toString()}`);
+  return readResponse<PageResponse<Responsible>>(response);
+}
+
+export async function listResponsibles(): Promise<Responsible[]> {
+  const firstPage = await getResponsiblePage(0);
+  if (firstPage.totalPages <= 1) {
+    return firstPage.content;
+  }
+
+  const remainingRequests = Array.from(
+    { length: firstPage.totalPages - 1 },
+    (_, index) => getResponsiblePage(index + 1),
+  );
+  const remainingPages = await Promise.all(remainingRequests);
+  return [firstPage, ...remainingPages].flatMap((page) => page.content);
+}
+
+export async function createProject(request: ProjectRequest): Promise<Project> {
+  const response = await fetch('/api/projects', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+  return readResponse<Project>(response);
+}
+
+export async function updateProject(projectId: number, request: ProjectRequest): Promise<Project> {
+  const response = await fetch(`/api/projects/${projectId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  });
+  return readResponse<Project>(response);
+}
+
+export async function deleteProject(projectId: number): Promise<void> {
+  const response = await fetch(`/api/projects/${projectId}`, { method: 'DELETE' });
+  if (!response.ok) {
+    await readResponse<never>(response);
+  }
 }

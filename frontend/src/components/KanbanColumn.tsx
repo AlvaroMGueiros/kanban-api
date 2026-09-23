@@ -10,6 +10,8 @@ interface KanbanColumnProps {
   onDragStart: (project: Project) => void;
   onDropProject: (status: ProjectStatus) => void;
   onMove: (project: Project, targetStatus: ProjectStatus) => void;
+  onEdit: (project: Project) => void;
+  onDelete: (project: Project) => void;
 }
 
 export function KanbanColumn({
@@ -19,6 +21,8 @@ export function KanbanColumn({
   onDragStart,
   onDropProject,
   onMove,
+  onEdit,
+  onDelete,
 }: KanbanColumnProps) {
   const [dragOver, setDragOver] = useState(false);
   const config = statusConfig[status];
@@ -62,6 +66,8 @@ export function KanbanColumn({
               moving={movingProjectId === project.id}
               onDragStart={onDragStart}
               onMove={onMove}
+              onEdit={onEdit}
+              onDelete={onDelete}
             />
           ))
         )}

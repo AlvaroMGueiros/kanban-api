@@ -34,3 +34,12 @@ export interface PageResponse<T> {
 export interface ApiError {
   message?: string;
 }
+
+export interface ProjectRequest {
+  name: string;
+  responsibleIds: number[];
+  plannedStartDate: string | null;
+  plannedEndDate: string | null;
+  actualStartDate: string | null;
+  actualEndDate: string | null;
+}

@@ -98,7 +98,7 @@ npm install
 npm run dev
 ```
 
-Acesse `http://localhost:5173`. O proxy de desenvolvimento encaminha `/api` e `/actuator` para `http://localhost:8080`. A tela consulta cada coluna do Kanban com paginação, permite transições por drag-and-drop ou seletor e apresenta a mensagem devolvida pela API quando uma regra impede o movimento.
+Acesse `http://localhost:5173`. O proxy de desenvolvimento encaminha `/api` e `/actuator` para `http://localhost:8080`. A tela consulta cada coluna do Kanban com paginação, permite criar, editar e excluir projetos, oferece transições por drag-and-drop ou seletor e apresenta a mensagem devolvida pela API quando uma regra impede uma operação.
 
 ## Docker
 

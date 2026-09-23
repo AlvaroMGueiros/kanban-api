@@ -1,9 +1,11 @@
 import { useState, type CSSProperties } from 'react';
 import { Alert } from './components/Alert';
 import { KanbanColumn } from './components/KanbanColumn';
+import { ProjectFormModal } from './components/ProjectFormModal';
 import { useKanbanBoard } from './hooks/useKanbanBoard';
+import { createProject, deleteProject, listResponsibles, updateProject } from './api/kanbanApi';
 import { colors } from './styles/colors';
-import { projectStatuses, type Project } from './types/project';
+import { projectStatuses, type Project, type ProjectRequest, type Responsible } from './types/project';
 
 type ColorVariables = CSSProperties & Record<`--color-${string}`, string>;
 
@@ -35,10 +37,61 @@ export default function App() {
     successMessage,
     dismissError,
     dismissSuccess,
+    showError,
+    showSuccess,
     loadProjects,
     moveProject,
   } = useKanbanBoard();
   const [draggedProject, setDraggedProject] = useState<Project | null>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [responsibles, setResponsibles] = useState<Responsible[]>([]);
+  const [formOpen, setFormOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formErrorMessage, setFormErrorMessage] = useState<string | null>(null);
+
+  async function openProjectForm(project: Project | null) {
+    setEditingProject(project);
+    setFormErrorMessage(null);
+    setFormOpen(true);
+    try {
+      setResponsibles(await listResponsibles());
+    } catch (error) {
+      setFormErrorMessage(error instanceof Error ? error.message : 'Não foi possível carregar os responsáveis.');
+    }
+  }
+
+  async function saveProject(request: ProjectRequest) {
+    setSaving(true);
+    setFormErrorMessage(null);
+    try {
+      if (editingProject) {
+        await updateProject(editingProject.id, request);
+      } else {
+        await createProject(request);
+      }
+      setFormOpen(false);
+      await loadProjects();
+      showSuccess(editingProject ? 'Projeto atualizado com sucesso.' : 'Projeto criado com sucesso.');
+    } catch (error) {
+      setFormErrorMessage(error instanceof Error ? error.message : 'Não foi possível salvar o projeto.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function removeProject(project: Project) {
+    const confirmed = window.confirm(`Excluir o projeto “${project.name}”? Esta ação não pode ser desfeita.`);
+    if (!confirmed) {
+      return;
+    }
+    try {
+      await deleteProject(project.id);
+      await loadProjects();
+      showSuccess(`Projeto “${project.name}” excluído com sucesso.`);
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Não foi possível excluir o projeto.');
+    }
+  }
 
   return (
     <div className="app-shell" style={colorVariables}>
@@ -56,9 +109,14 @@ export default function App() {
             <h1>Quadro de projetos</h1>
             <p>Acompanhe prazos e mova os projetos conforme as regras do fluxo.</p>
           </div>
-          <button type="button" className="refresh-button" onClick={() => void loadProjects()} disabled={loading}>
-            {loading ? 'Atualizando…' : 'Atualizar quadro'}
-          </button>
+          <div className="header-actions">
+            <button type="button" className="secondary-button" onClick={() => void loadProjects()} disabled={loading}>
+              {loading ? 'Atualizando…' : 'Atualizar quadro'}
+            </button>
+            <button type="button" className="primary-button" onClick={() => void openProjectForm(null)}>
+              + Novo projeto
+            </button>
+          </div>
         </header>
 
         {errorMessage && <Alert message={errorMessage} tone="danger" onClose={dismissError} />}
@@ -82,11 +140,23 @@ export default function App() {
                   }
                 }}
                 onMove={(project, targetStatus) => void moveProject(project, targetStatus)}
+                onEdit={(project) => void openProjectForm(project)}
+                onDelete={(project) => void removeProject(project)}
               />
             ))}
           </div>
         )}
       </main>
+      {formOpen && (
+        <ProjectFormModal
+          project={editingProject}
+          responsibles={responsibles}
+          saving={saving}
+          errorMessage={formErrorMessage}
+          onClose={() => setFormOpen(false)}
+          onSubmit={(request) => void saveProject(request)}
+        />
+      )}
     </div>
   );
 }

@@ -105,20 +105,36 @@ h1 {
   color: var(--color-text-muted);
 }
 
-.refresh-button {
+.primary-button,
+.secondary-button {
   min-height: 42px;
   padding: 0 18px;
-  border: 0;
   border-radius: 10px;
+  font-weight: 700;
+}
+
+.primary-button {
+  border: 1px solid var(--color-primary);
   color: var(--color-surface);
   background: var(--color-primary);
-  font-weight: 700;
   box-shadow: 0 8px 20px var(--color-shadow);
 }
 
-.refresh-button:disabled {
+.secondary-button {
+  border: 1px solid var(--color-border);
+  color: var(--color-primary-strong);
+  background: var(--color-surface);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
   cursor: wait;
   opacity: 0.65;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
 }
 
 .alert,
@@ -397,6 +413,174 @@ h1 {
   font-size: 11px;
 }
 
+.project-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.project-actions button {
+  padding: 6px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  color: var(--color-primary-strong);
+  background: var(--color-surface);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.project-actions .delete-button {
+  border-color: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: color-mix(in srgb, var(--color-primary-strong) 58%, transparent);
+}
+
+.modal {
+  width: min(680px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--color-primary-strong) 24%, transparent);
+}
+
+.modal__header,
+.modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.modal__header {
+  padding: 22px 24px 15px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal__header h2 {
+  margin: 4px 0 0;
+  color: var(--color-primary-strong);
+  font-size: 22px;
+}
+
+.icon-button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  font-size: 23px;
+}
+
+.modal form {
+  display: grid;
+  gap: 18px;
+  padding: 22px 24px 24px;
+}
+
+.form-error {
+  padding: 11px 13px;
+  border: 1px solid var(--color-danger);
+  border-radius: 9px;
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+  font-size: 13px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.form-field {
+  display: grid;
+  gap: 6px;
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-field input {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.responsible-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.responsible-fieldset legend {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.responsible-fieldset > p {
+  margin: 0;
+  padding: 12px;
+  border-radius: 9px;
+  color: var(--color-warning);
+  background: var(--color-warning-soft);
+  font-size: 12px;
+}
+
+.responsible-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.responsible-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.responsible-option input {
+  margin-top: 3px;
+}
+
+.responsible-option strong,
+.responsible-option small {
+  display: block;
+}
+
+.responsible-option small {
+  margin-top: 2px;
+  color: var(--color-text-muted);
+}
+
+.modal__footer {
+  justify-content: flex-end;
+  padding-top: 5px;
+}
+
 :focus-visible {
   outline: 3px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
   outline-offset: 2px;
@@ -427,8 +611,18 @@ h1 {
     flex-direction: column;
   }
 
-  .refresh-button {
+  .header-actions,
+  .header-actions button {
     width: 100%;
+  }
+
+  .header-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-grid,
+  .responsible-options {
+    grid-template-columns: 1fr;
   }
 }
 

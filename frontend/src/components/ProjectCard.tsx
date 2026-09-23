@@ -6,6 +6,8 @@ interface ProjectCardProps {
   moving: boolean;
   onDragStart: (project: Project) => void;
   onMove: (project: Project, targetStatus: ProjectStatus) => void;
+  onEdit: (project: Project) => void;
+  onDelete: (project: Project) => void;
 }
 
 function formatDate(value: string | null): string {
@@ -15,7 +17,7 @@ function formatDate(value: string | null): string {
   return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`));
 }
 
-export function ProjectCard({ project, moving, onDragStart, onMove }: ProjectCardProps) {
+export function ProjectCard({ project, moving, onDragStart, onMove, onEdit, onDelete }: ProjectCardProps) {
   const department = project.responsibles[0]?.department ?? 'Sem secretaria';
   const responsibleNames = project.responsibles.map((responsible) => responsible.name).join(', ');
 
@@ -60,6 +62,10 @@ export function ProjectCard({ project, moving, onDragStart, onMove }: ProjectCar
           ))}
         </select>
       </label>
+      <div className="project-actions">
+        <button type="button" onClick={() => onEdit(project)} disabled={moving}>Editar</button>
+        <button type="button" className="delete-button" onClick={() => onDelete(project)} disabled={moving}>Excluir</button>
+      </div>
     </article>
   );
 }

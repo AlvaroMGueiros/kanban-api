@@ -68,6 +68,8 @@ export function useKanbanBoard() {
     successMessage,
     dismissError: () => setErrorMessage(null),
     dismissSuccess: () => setSuccessMessage(null),
+    showError: (message: string) => setErrorMessage(message),
+    showSuccess: (message: string) => setSuccessMessage(message),
     loadProjects,
     moveProject,
   };
