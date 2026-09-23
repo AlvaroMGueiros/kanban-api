@@ -75,7 +75,7 @@ As doze combinações entre estados diferentes têm cobertura unitária.
 - DTOs separam o contrato HTTP das entidades.
 - A data de referência é capturada uma vez por operação.
 
-Consulte [ADR 001](docs/adr/001-derivedStatusAndClock.md) e [ADR 002](docs/adr/002-relationalPersistence.md).
+Consulte [ADR 001](docs/adr/001-derivedStatusAndClock.md), [ADR 002](docs/adr/002-relationalPersistence.md) e a [proposta do assistente de IA](docs/adr/003-ai-project-assistant.md).
 
 ## Execução local
 
@@ -157,5 +157,6 @@ As migrations criam o schema `kanban`, `responsibles`, `projects`, `projectRespo
 - Indicador de projetos por status.
 - OpenAPI com exemplos e erros; Docker com healthchecks e usuário restrito.
 - CI Java 21; regras temporais determinísticas por `Clock`; ADRs e diagramas.
+- Proposta arquitetural de assistente de projetos com contexto controlado, RAG opcional, resiliência, segurança, avaliação e trade-offs documentados no [ADR 003](docs/adr/003-ai-project-assistant.md).
 
 O processo assistido está documentado em [AI_USAGE.md](AI_USAGE.md).
