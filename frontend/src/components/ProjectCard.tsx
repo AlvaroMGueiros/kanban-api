@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { projectStatuses, type Project, type ProjectStatus } from '../types/project';
 import { statusConfig } from '../config/status';
 
@@ -6,6 +6,7 @@ interface ProjectCardProps {
   project: Project;
   moving: boolean;
   onDragStart: (project: Project) => void;
+  onDragEnd: () => void;
   onMove: (project: Project, targetStatus: ProjectStatus) => void;
   onEdit: (project: Project) => void;
   onDelete: (project: Project) => void;
@@ -18,8 +19,9 @@ function formatDate(value: string | null): string {
   return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(new Date(`${value}T00:00:00Z`));
 }
 
-export function ProjectCard({ project, moving, onDragStart, onMove, onEdit, onDelete }: ProjectCardProps) {
+export function ProjectCard({ project, moving, onDragStart, onDragEnd, onMove, onEdit, onDelete }: ProjectCardProps) {
   const menuRef = useRef<HTMLDetailsElement>(null);
+  const [dragging, setDragging] = useState(false);
   const department = project.responsibles[0]?.department ?? 'Sem secretaria';
   const responsibleNames = project.responsibles.map((responsible) => responsible.name).join(', ');
 
@@ -42,14 +44,30 @@ export function ProjectCard({ project, moving, onDragStart, onMove, onEdit, onDe
     };
   }, []);
 
+  function startDragging(event: DragEvent<HTMLElement>) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(project.id));
+    setDragging(true);
+    onDragStart(project);
+  }
+
+  function finishDragging() {
+    setDragging(false);
+    onDragEnd();
+  }
+
   return (
     <article
-      className={`project-card${moving ? ' project-card--moving' : ''}`}
+      className={`project-card${moving ? ' project-card--moving' : ''}${dragging ? ' project-card--dragging' : ''}`}
       draggable={!moving}
-      onDragStart={() => onDragStart(project)}
+      onDragStart={startDragging}
+      onDragEnd={finishDragging}
     >
       <div className="project-card__header">
-        <span className="project-card__id">#{project.id}</span>
+        <div className="project-card__identity">
+          <span className="drag-handle" aria-hidden="true">⠿</span>
+          <span className="project-card__id">#{project.id}</span>
+        </div>
         <div className="project-card__header-actions">
           {project.delayDays > 0 && <span className="delay-badge">{project.delayDays}d em atraso</span>}
           <details ref={menuRef} className="project-menu">

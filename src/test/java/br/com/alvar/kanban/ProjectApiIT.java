@@ -40,6 +40,32 @@ class ProjectApiIT extends ApiIntegrationTest {
     }
 
     @Test
+    void shouldAutomaticallyRecalculateStatusWhenScheduleDatesAreEdited() throws Exception {
+        long responsibleId = createResponsible("Ana", "ana@example.com");
+        ProjectResponse project = createProject(new ProjectRequest("Cronograma", List.of(responsibleId),
+                today.plusDays(1), today.plusDays(5), null, null));
+        assertThat(project.status()).isEqualTo(br.com.alvar.kanban.domain.model.ProjectStatus.A_INICIAR);
+
+        mockMvc.perform(put("/api/projects/" + project.id()).contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ProjectRequest("Cronograma", List.of(responsibleId),
+                                today.minusDays(2), today.plusDays(5), today, null))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("EM_ANDAMENTO"));
+
+        mockMvc.perform(put("/api/projects/" + project.id()).contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ProjectRequest("Cronograma", List.of(responsibleId),
+                                today.minusDays(5), today.minusDays(1), today.minusDays(5), null))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ATRASADO"));
+
+        mockMvc.perform(put("/api/projects/" + project.id()).contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new ProjectRequest("Cronograma", List.of(responsibleId),
+                                today.minusDays(5), today.minusDays(1), today.minusDays(5), today))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CONCLUIDO"));
+    }
+
+    @Test
     void shouldReadProjectWithoutAnyDatesAfterReloadingFromPostgres() throws Exception {
         long responsibleId = createResponsible("Ana", "ana@example.com");
         ProjectResponse project = createProject(new ProjectRequest("Sem prazo", List.of(responsibleId), null, null, null, null));

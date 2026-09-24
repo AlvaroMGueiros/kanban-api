@@ -7,7 +7,9 @@ interface KanbanColumnProps {
   status: ProjectStatus;
   projects: Project[];
   movingProjectId: number | null;
+  draggedProject: Project | null;
   onDragStart: (project: Project) => void;
+  onDragEnd: () => void;
   onDropProject: (status: ProjectStatus) => void;
   onMove: (project: Project, targetStatus: ProjectStatus) => void;
   onEdit: (project: Project) => void;
@@ -18,7 +20,9 @@ export function KanbanColumn({
   status,
   projects,
   movingProjectId,
+  draggedProject,
   onDragStart,
+  onDragEnd,
   onDropProject,
   onMove,
   onEdit,
@@ -26,13 +30,15 @@ export function KanbanColumn({
 }: KanbanColumnProps) {
   const [dragOver, setDragOver] = useState(false);
   const config = statusConfig[status];
+  const canReceiveProject = draggedProject !== null && draggedProject.status !== status;
 
   return (
     <section
-      className={`kanban-column kanban-column--${config.tone}${dragOver ? ' kanban-column--drag-over' : ''}`}
+      className={`kanban-column kanban-column--${config.tone}${dragOver && canReceiveProject ? ' kanban-column--drag-over' : ''}${canReceiveProject ? ' kanban-column--available' : ''}`}
       onDragOver={(event) => {
         event.preventDefault();
-        setDragOver(true);
+        event.dataTransfer.dropEffect = canReceiveProject ? 'move' : 'none';
+        setDragOver(canReceiveProject);
       }}
       onDragLeave={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
@@ -42,7 +48,9 @@ export function KanbanColumn({
       onDrop={(event) => {
         event.preventDefault();
         setDragOver(false);
-        onDropProject(status);
+        if (canReceiveProject) {
+          onDropProject(status);
+        }
       }}
     >
       <header className="kanban-column__header">
@@ -56,8 +64,16 @@ export function KanbanColumn({
         </div>
       </header>
       <div className="kanban-column__content">
+        {dragOver && canReceiveProject && (
+          <div className="kanban-drop-indicator" role="status">
+            <span aria-hidden="true">↓</span>
+            Soltar em {config.label}
+          </div>
+        )}
         {projects.length === 0 ? (
-          <div className="empty-column">Arraste um projeto para esta coluna</div>
+          <div className={`empty-column${canReceiveProject ? ' empty-column--available' : ''}`}>
+            {canReceiveProject ? `Solte para mover para ${config.label}` : 'Arraste um projeto para esta coluna'}
+          </div>
         ) : (
           projects.map((project) => (
             <ProjectCard
@@ -65,6 +81,7 @@ export function KanbanColumn({
               project={project}
               moving={movingProjectId === project.id}
               onDragStart={onDragStart}
+              onDragEnd={onDragEnd}
               onMove={onMove}
               onEdit={onEdit}
               onDelete={onDelete}

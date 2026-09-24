@@ -142,6 +142,7 @@ class KanbanTransitionServiceTest {
         assertThatThrownBy(() -> KanbanTransitionService.transition(schedule, ProjectStatus.ATRASADO, TODAY))
                 .isInstanceOf(TransitionNotAllowedException.class)
                 .hasMessageContaining("ainda está dentro do prazo")
+                .hasMessageContaining("remova o início realizado")
                 .hasMessageContaining("término previsto");
     }
 
@@ -173,8 +174,8 @@ class KanbanTransitionServiceTest {
         ProjectSchedule schedule = new ProjectSchedule(YESTERDAY, YESTERDAY, null, null);
         assertThatThrownBy(() -> KanbanTransitionService.transition(schedule, ProjectStatus.EM_ANDAMENTO, TODAY))
                 .isInstanceOf(TransitionNotAllowedException.class)
-                .hasMessageContaining("informe o início realizado")
-                .hasMessageContaining("término previsto");
+                .hasMessageContaining("início e o término previstos")
+                .hasMessageContaining("posteriores a hoje");
     }
 
     @Test

@@ -71,7 +71,8 @@ public final class KanbanTransitionService {
             case ATRASADO -> {
                 requireStatus(schedule, ProjectStatus.ATRASADO, today,
                         "Este projeto ainda está dentro do prazo e não pode ser movido para Atrasado. "
-                        + "Abra Editar e ajuste o início ou o término previsto para uma data anterior a hoje.");
+                        + "Abra Editar e remova o início realizado para que o status seja recalculado, "
+                        + "ou ajuste o início ou o término previsto para uma data anterior a hoje.");
                 yield schedule;
             }
             case CONCLUIDO -> {
@@ -97,8 +98,7 @@ public final class KanbanTransitionService {
             case EM_ANDAMENTO -> {
                 requireStatus(schedule, ProjectStatus.EM_ANDAMENTO, today,
                         "Não é possível mover para Em andamento porque as datas ainda indicam atraso. "
-                        + "Abra Editar, informe o início realizado e ajuste o término previsto para hoje "
-                        + "ou uma data futura.");
+                        + "Abra Editar e ajuste o início e o término previstos para datas posteriores a hoje.");
                 yield schedule;
             }
             case CONCLUIDO -> {

@@ -30,7 +30,7 @@ Os commits foram feitos durante o desenvolvimento normal do projeto, sem altera�
 
 Além dos testes unitários, utilizei testes de integração com PostgreSQL através de Testcontainers, MockMvc para a API, Flyway para validar as migrations e Docker Compose para conferir a execução da aplicação em um ambiente próximo ao descrito no desafio.
 
-Ao final, `./mvnw verify` executava 72 testes unitários e 47 testes de integração com sucesso. O frontend também possuía 7 testes automatizados.
+Ao final, `./mvnw verify` executava 72 testes unitários e 48 testes de integração com sucesso. O frontend também possuía 7 testes automatizados.
 
 ## Exemplo de interação com a IA
 

@@ -87,14 +87,16 @@ export default function App() {
         {loading ? (
           <div className="loading-state" role="status">Carregando projetos…</div>
         ) : (
-          <div className="kanban-board">
+          <div className={`kanban-board${draggedProject ? ' kanban-board--dragging' : ''}`}>
             {projectStatuses.map((status) => (
               <KanbanColumn
                 key={status}
                 status={status}
                 projects={columns[status]}
                 movingProjectId={movingProjectId}
+                draggedProject={draggedProject}
                 onDragStart={setDraggedProject}
+                onDragEnd={() => setDraggedProject(null)}
                 onDropProject={(targetStatus) => {
                   if (draggedProject) {
                     void moveProject(draggedProject, targetStatus);
