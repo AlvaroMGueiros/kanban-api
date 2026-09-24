@@ -10,6 +10,20 @@ export interface Responsible {
   department: string;
 }
 
+export interface Department {
+  id: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResponsibleRequest {
+  name: string;
+  email: string;
+  role: string;
+  department: string;
+}
+
 export interface Project {
   id: number;
   name: string;

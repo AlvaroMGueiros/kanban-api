@@ -87,6 +87,10 @@ public class ApiExceptionHandler {
                     return error(HttpStatus.CONFLICT, "RESOURCE_CONFLICT",
                             "Responsável vinculado a projeto. Substitua ou remova o vínculo antes de excluir.", request);
                 }
+                if ("responsibleDepartmentFk".equals(violation.getConstraintName())) {
+                    return error(HttpStatus.CONFLICT, "RESOURCE_CONFLICT",
+                            "Secretaria vinculada a responsável. Altere os responsáveis antes de excluir.", request);
+                }
             }
             cause = cause.getCause();
         }

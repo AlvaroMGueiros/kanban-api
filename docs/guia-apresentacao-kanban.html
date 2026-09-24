@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guia de estudo e apresentação — Kanban API</title>
+  <style>
+    @page { size: A4; margin: 16mm 15mm 18mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; color: #182230; line-height: 1.45; font-size: 10.5pt; margin: 0; }
+    h1 { font-size: 28pt; color: #12355b; margin: 0 0 10px; }
+    h2 { font-size: 18pt; color: #164e63; border-bottom: 2px solid #bae6fd; padding-bottom: 5px; margin-top: 25px; page-break-after: avoid; }
+    h3 { font-size: 13pt; color: #1e3a5f; margin: 18px 0 6px; page-break-after: avoid; }
+    h4 { font-size: 11pt; margin: 13px 0 4px; page-break-after: avoid; }
+    p { margin: 6px 0 9px; }
+    ul, ol { margin: 5px 0 10px 22px; padding: 0; }
+    li { margin: 3px 0; }
+    code { font-family: Consolas, monospace; background: #f1f5f9; padding: 1px 4px; border-radius: 3px; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 11px; border-radius: 6px; overflow-wrap: anywhere; white-space: pre-wrap; font-size: 8.8pt; page-break-inside: avoid; }
+    table { width: 100%; border-collapse: collapse; margin: 9px 0 15px; font-size: 9.2pt; page-break-inside: avoid; }
+    th { background: #164e63; color: white; text-align: left; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px; vertical-align: top; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    .cover { min-height: 245mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+    .subtitle { font-size: 16pt; color: #475569; max-width: 620px; }
+    .meta { margin-top: 38px; color: #64748b; }
+    .page-break { page-break-before: always; }
+    .callout { border-left: 5px solid #0ea5e9; background: #f0f9ff; padding: 10px 13px; margin: 10px 0; page-break-inside: avoid; }
+    .warning { border-left-color: #f59e0b; background: #fffbeb; }
+    .answer { border-left: 4px solid #22c55e; padding-left: 10px; margin-bottom: 12px; }
+    .small { color: #64748b; font-size: 9pt; }
+    .diagram { text-align: center; font-family: Consolas, monospace; background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px; white-space: pre; page-break-inside: avoid; }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <h1>Kanban API</h1>
+    <p class="subtitle">Guia completo de estudo, demonstração e apresentação técnica</p>
+    <p>Java 21 · Spring Boot · PostgreSQL · Flyway · Docker · Testcontainers · OpenAPI</p>
+    <div class="meta">
+      <p><strong>Objetivo:</strong> explicar o sistema com segurança em uma entrevista técnica, incluindo decisões, regras, testes e trade-offs.</p>
+      <p><strong>Repositório:</strong> github.com/AlvaroMGueiros/kanban-api</p>
+      <p><strong>Validação:</strong> 71 testes unitários + 44 testes de integração/API.</p>
+    </div>
+  </section>
+
+  <h2>1. A apresentação em 60 segundos</h2>
+  <div class="callout">
+    “Eu desenvolvi uma API REST para gerenciar projetos em um quadro Kanban. O ponto central é que o status não é salvo diretamente: ele é derivado das datas previstas e realizadas, evitando inconsistências com a passagem do tempo. Separei regras de status, métricas e transições em serviços de domínio testáveis, usei PostgreSQL com Flyway, filtros paginados no banco, tratamento padronizado de erros, Swagger, Docker e CI. A solução tem testes unitários fortes nas regras e testes de integração com PostgreSQL real via Testcontainers.”
+  </div>
+
+  <h3>O que enfatizar</h3>
+  <ul>
+    <li>O desafio é mais sobre regras temporais e consistência do que sobre CRUD.</li>
+    <li>Status é consequência das datas; não existe <code>setStatus</code>.</li>
+    <li>Transições são transacionais e verificam o estado final.</li>
+    <li>Filtros acontecem antes da paginação no PostgreSQL.</li>
+    <li>As ambiguidades foram documentadas e cobertas por testes.</li>
+  </ul>
+
+  <h2>2. Visão geral funcional</h2>
+  <p>O sistema gerencia duas entidades principais:</p>
+  <ul>
+    <li><strong>Responsável:</strong> nome, e-mail único, cargo, secretaria e auditoria.</li>
+    <li><strong>Projeto:</strong> nome, responsáveis, cronograma, métricas e status calculado.</li>
+  </ul>
+  <p>Um projeto pode ter vários responsáveis e um responsável pode participar de vários projetos. A API oferece CRUDs, listagens paginadas, filtros, quadro Kanban, transições e indicador de quantidade por status.</p>
+
+  <h3>Funcionalidades entregues</h3>
+  <table>
+    <tr><th>Área</th><th>Entrega</th></tr>
+    <tr><td>Responsáveis</td><td>CRUD, validação, e-mail normalizado e único, bloqueio de exclusão quando vinculado.</td></tr>
+    <tr><td>Projetos</td><td>CRUD, múltiplos responsáveis, datas, auditoria, versionamento otimista.</td></tr>
+    <tr><td>Kanban</td><td>Filtro por coluna e transição validada entre estados.</td></tr>
+    <tr><td>Métricas</td><td>Dias de atraso e percentual de tempo restante.</td></tr>
+    <tr><td>Consultas</td><td>Paginação, ordenação e filtros combináveis.</td></tr>
+    <tr><td>Indicadores</td><td>Quantidade de projetos por cada status.</td></tr>
+    <tr><td>Entrega</td><td>Swagger, Postman, Docker, CI, ADRs, diagramas e AI_USAGE.</td></tr>
+  </table>
+
+  <div class="page-break"></div>
+  <h2>3. Arquitetura</h2>
+  <div class="diagram">Cliente HTTP / Swagger / Postman
+              │
+              ▼
+ presentation/controller ─── presentation/exception
+              │
+              ▼
+ application/service ─────── application/dto + mapper
+              │
+      ┌───────┴────────┐
+      ▼                ▼
+ domain/model     domain/service
+      │                │
+      └───────┬────────┘
+              ▼
+ infrastructure/repository ─── PostgreSQL
+              │
+ infrastructure/config + Flyway</div>
+
+  <h3>Responsabilidade de cada camada</h3>
+  <table>
+    <tr><th>Camada</th><th>Responsabilidade</th><th>Exemplos</th></tr>
+    <tr><td>Presentation</td><td>Contrato HTTP, parâmetros, validação de entrada e erros.</td><td><code>ProjectController</code>, <code>ApiExceptionHandler</code></td></tr>
+    <tr><td>Application</td><td>Orquestra caso de uso, transação, banco e mapeamento.</td><td><code>ProjectService</code>, <code>KanbanService</code></td></tr>
+    <tr><td>Domain</td><td>Invariantes e regras que podem ser testadas sem Spring.</td><td><code>ProjectStatusPolicy</code>, <code>KanbanTransitionService</code></td></tr>
+    <tr><td>Infrastructure</td><td>Persistência, consultas e configuração técnica.</td><td><code>ProjectRepository</code>, <code>ProjectSpecifications</code></td></tr>
+  </table>
+
+  <h3>Por que uma arquitetura pragmática?</h3>
+  <p>O projeto não cria interfaces ou modelos duplicados sem necessidade. As entidades têm anotações JPA, mas as regras centrais continuam isoladas. Isso reduz cerimônia e mantém testabilidade. Para o tamanho do desafio, separar um domínio totalmente independente da persistência duplicaria modelos e mapeamentos sem benefício proporcional.</p>
+
+  <h3>Fluxo de uma requisição</h3>
+  <ol>
+    <li>O controller recebe um DTO e o Bean Validation verifica formato e obrigatoriedade.</li>
+    <li>O serviço captura <code>LocalDate.now(clock)</code> uma vez.</li>
+    <li>O serviço carrega entidades e chama as regras de domínio.</li>
+    <li>O domínio valida datas, calcula estado ou executa uma transição.</li>
+    <li>O repositório persiste dentro da transação.</li>
+    <li>O mapper produz o DTO de resposta com métricas calculadas.</li>
+    <li>Exceções são convertidas para o contrato HTTP padronizado.</li>
+  </ol>
+
+  <h2>4. Modelo e banco de dados</h2>
+  <div class="diagram">RESPONSIBLES  N ───── N  PROJECTS
+                    │
+             projectResponsibles</div>
+  <p>A relação N:N é suficiente porque o vínculo não possui atributos próprios. Caso fosse necessário registrar função no projeto, percentual de alocação ou período, a tabela de vínculo deveria virar uma entidade.</p>
+
+  <h3>Decisões de persistência</h3>
+  <ul>
+    <li><code>Long</code> com identity para IDs.</li>
+    <li>Flyway é o único responsável por alterar o schema.</li>
+    <li>Hibernate usa <code>ddl-auto=validate</code>.</li>
+    <li>E-mail normalizado para minúsculas e protegido por constraint única.</li>
+    <li>Constraints garantem ordem das datas também no banco.</li>
+    <li><code>@Version</code> protege o projeto contra escritas concorrentes silenciosas.</li>
+    <li>Exclusão do projeto remove vínculos; responsável vinculado usa <code>ON DELETE RESTRICT</code>.</li>
+  </ul>
+
+  <h3>Migrations</h3>
+  <table>
+    <tr><th>Versão</th><th>Finalidade</th></tr>
+    <tr><td>V1</td><td>Cria o schema <code>kanban</code>.</td></tr>
+    <tr><td>V2</td><td>Cria responsáveis e unicidade de e-mail.</td></tr>
+    <tr><td>V3</td><td>Cria projetos, vínculo N:N, constraints e índice do responsável.</td></tr>
+    <tr><td>V4</td><td>Adiciona índices para secretaria e datas usadas pelos filtros de status.</td></tr>
+  </table>
+
+  <div class="page-break"></div>
+  <h2>5. Regra de status</h2>
+  <p>A precedência é necessária porque mais de uma condição pode ser verdadeira ao mesmo tempo.</p>
+  <table>
+    <tr><th>Prioridade</th><th>Status</th><th>Condição</th></tr>
+    <tr><td>1</td><td><code>CONCLUIDO</code></td><td><code>actualEndDate != null</code></td></tr>
+    <tr><td>2</td><td><code>ATRASADO</code></td><td>Início previsto passou sem início realizado, ou término previsto passou sem conclusão.</td></tr>
+    <tr><td>3</td><td><code>EM_ANDAMENTO</code></td><td>Início realizado preenchido, sem conclusão e sem atraso.</td></tr>
+    <tr><td>4</td><td><code>A_INICIAR</code></td><td>Demais casos válidos.</td></tr>
+  </table>
+
+  <h3>Por que não persistir o status?</h3>
+  <p>Um projeto pode ficar atrasado à meia-noite sem nenhuma alteração no banco. Se o status fosse uma coluna, seria necessário um job de sincronização e ainda existiria uma janela de inconsistência. Derivar o estado garante que a leitura reflita a data atual.</p>
+
+  <h3>Uso de Clock</h3>
+  <p>Não se espalha <code>LocalDate.now()</code> pelo código. Um <code>Clock</code> configurável define a referência temporal. Nos testes ele é fixo, o que torna cenários de ontem, hoje, amanhã e virada de fuso determinísticos.</p>
+
+  <div class="callout warning">
+    <strong>Ambiguidade do vencimento:</strong> o texto diz que EM_ANDAMENTO exige término previsto maior que hoje, mas não define nenhum status para um projeto iniciado no próprio dia do prazo. A decisão foi mantê-lo em andamento até o fim desse dia e classificá-lo como atrasado no dia seguinte. Isso evita um registro válido passar a provocar erro apenas pela mudança da data.
+  </div>
+
+  <p>Projeto iniciado sem término previsto é rejeitado, pois não há como satisfazer a definição oficial de EM_ANDAMENTO e ele também não está atrasado.</p>
+
+  <h2>6. Métricas</h2>
+  <h3>Dias de atraso</h3>
+  <pre>se concluído: 0
+se terminoPrevisto existe e terminoPrevisto &lt; hoje:
+    dias = diasEntre(terminoPrevisto, hoje)
+caso contrário: 0</pre>
+  <p>Um projeto pode estar atrasado pelo início e ainda ter zero dias de atraso, porque a fórmula oficial mede somente o atraso do término.</p>
+
+  <h3>Percentual restante</h3>
+  <pre>total = diasEntre(inicioPrevisto, terminoPrevisto)
+restante = diasEntre(hoje, terminoPrevisto)
+percentual = restante / total * 100</pre>
+  <ul>
+    <li>Sem as duas datas: zero.</li>
+    <li>Duração menor ou igual a zero: zero.</li>
+    <li>Concluído: zero.</li>
+    <li>Resultado limitado entre 0 e 100.</li>
+    <li>Duas casas decimais com <code>HALF_UP</code>.</li>
+  </ul>
+
+  <h2>7. Transições do Kanban</h2>
+  <p>O endpoint não atribui diretamente um status. Ele recebe o destino, aplica apenas a ação prevista, recalcula e confirma o resultado. A operação inteira está em uma transação.</p>
+  <table>
+    <tr><th>Origem → destino</th><th>Ação e resultado</th></tr>
+    <tr><td>A_INICIAR → EM_ANDAMENTO</td><td>Define início realizado como hoje; exige cronograma compatível.</td></tr>
+    <tr><td>A_INICIAR → ATRASADO</td><td>Não fabrica atraso; bloqueia e orienta ajuste quando ainda não está atrasado.</td></tr>
+    <tr><td>A_INICIAR → CONCLUIDO</td><td>Define término realizado como hoje.</td></tr>
+    <tr><td>EM_ANDAMENTO → A_INICIAR</td><td>Remove início realizado; rejeita se o resultado for atrasado.</td></tr>
+    <tr><td>EM_ANDAMENTO → ATRASADO</td><td>Sem ação automática; exige datas que realmente produzam atraso.</td></tr>
+    <tr><td>EM_ANDAMENTO → CONCLUIDO</td><td>Define término realizado como hoje.</td></tr>
+    <tr><td>ATRASADO → A_INICIAR</td><td>Sem ação automática; orienta correção das datas.</td></tr>
+    <tr><td>ATRASADO → EM_ANDAMENTO</td><td>Sem ação automática; orienta prazo e início realizado.</td></tr>
+    <tr><td>ATRASADO → CONCLUIDO</td><td>Define término realizado como hoje.</td></tr>
+    <tr><td>CONCLUIDO → A_INICIAR</td><td>Bloqueia sem mutação; exige edição explícita das datas.</td></tr>
+    <tr><td>CONCLUIDO → EM_ANDAMENTO</td><td>Remove término realizado; bloqueia se resultar em atraso.</td></tr>
+    <tr><td>CONCLUIDO → ATRASADO</td><td>Remove término realizado somente se o cálculo resultar em atraso.</td></tr>
+  </table>
+
+  <h3>Atomicidade</h3>
+  <p>Uma exceção causa rollback. Há teste de API que tenta mover um concluído para A_INICIAR, recebe 422 e depois confirma que o término realizado continua salvo. Isso demonstra que não existe efeito parcial.</p>
+
+  <div class="page-break"></div>
+  <h2>8. Contrato REST</h2>
+  <table>
+    <tr><th>Método</th><th>Rota</th><th>Uso</th></tr>
+    <tr><td>POST / GET</td><td><code>/api/responsibles</code></td><td>Criar e listar responsáveis.</td></tr>
+    <tr><td>GET / PUT / DELETE</td><td><code>/api/responsibles/{id}</code></td><td>Consultar, editar e excluir.</td></tr>
+    <tr><td>POST / GET</td><td><code>/api/projects</code></td><td>Criar e listar projetos.</td></tr>
+    <tr><td>GET / PUT / DELETE</td><td><code>/api/projects/{id}</code></td><td>Consultar, editar e excluir.</td></tr>
+    <tr><td>GET</td><td><code>/api/kanban/projects?status=...</code></td><td>Consultar coluna do Kanban.</td></tr>
+    <tr><td>PATCH</td><td><code>/api/kanban/projects/{id}/status</code></td><td>Solicitar uma transição.</td></tr>
+    <tr><td>GET</td><td><code>/api/indicators/projects-by-status</code></td><td>Quantidade por status.</td></tr>
+  </table>
+
+  <h3>Filtros</h3>
+  <p><code>GET /api/projects</code> aceita <code>status</code>, <code>responsibleId</code>, <code>department</code> e <code>text</code>, além de <code>page</code>, <code>size</code> e <code>sort</code>. Os filtros são combináveis.</p>
+  <p>A regra de status foi traduzida para uma JPA <code>Specification</code>. Assim o PostgreSQL filtra antes de aplicar offset e limite, preservando <code>totalElements</code> e <code>totalPages</code>.</p>
+
+  <h3>Erros</h3>
+  <table>
+    <tr><th>HTTP</th><th>Quando</th></tr>
+    <tr><td>400</td><td>JSON, parâmetro, paginação ou Bean Validation inválidos.</td></tr>
+    <tr><td>404</td><td>Projeto ou responsável não encontrado.</td></tr>
+    <tr><td>409</td><td>E-mail duplicado ou responsável ainda vinculado.</td></tr>
+    <tr><td>422</td><td>Regra de domínio, datas ou transição incompatível.</td></tr>
+  </table>
+  <pre>{
+  "timestamp": "2026-09-22T15:00:00Z",
+  "status": 422,
+  "error": "TRANSITION_NOT_ALLOWED",
+  "message": "Mensagem específica com o ajuste necessário",
+  "path": "/api/kanban/projects/1/status"
+}</pre>
+
+  <h2>9. Testes</h2>
+  <p>A estratégia prioriza regras de negócio em vez de cobertura artificial.</p>
+  <table>
+    <tr><th>Tipo</th><th>O que prova</th></tr>
+    <tr><td>Unidade</td><td>Precedência, limites temporais, métricas, nulos, doze transições e invariantes.</td></tr>
+    <tr><td>Serviço</td><td>Normalização, duplicidade, recálculo pela passagem do tempo e fuso.</td></tr>
+    <tr><td>Integração</td><td>PostgreSQL real, migrations, constraints, transações, rollback e índices.</td></tr>
+    <tr><td>API</td><td>Contratos, códigos HTTP, validação, filtros, paginação e OpenAPI.</td></tr>
+  </table>
+  <p><strong>Resultado atual:</strong> 71 testes unitários e 44 testes de integração/API, todos aprovados por <code>mvnw verify</code>.</p>
+
+  <h3>Por que Testcontainers?</h3>
+  <p>H2 poderia esconder diferenças de SQL, constraints, schema, precisão temporal e comportamento do PostgreSQL. Testcontainers executa a integração no mesmo banco usado pela aplicação.</p>
+
+  <h2>10. Docker, execução e CI</h2>
+  <pre>docker compose up --build --wait
+./mvnw verify</pre>
+  <ul>
+    <li>Dockerfile multi-stage: JDK no build e JRE no runtime.</li>
+    <li>Aplicação executada por usuário sem privilégios.</li>
+    <li>PostgreSQL e API possuem healthchecks.</li>
+    <li>Compose aguarda o banco saudável antes de iniciar a aplicação.</li>
+    <li>GitHub Actions usa Java 21, cache Maven e executa <code>mvn verify</code>.</li>
+  </ul>
+
+  <div class="page-break"></div>
+  <h2>11. Roteiro de demonstração</h2>
+  <ol>
+    <li>Abra <code>http://localhost:8080/swagger-ui</code>.</li>
+    <li>Mostre <code>GET /actuator/health</code> e confirme <code>UP</code>.</li>
+    <li>Crie um responsável e mostre o e-mail normalizado.</li>
+    <li>Crie um projeto futuro e mostre <code>A_INICIAR</code> e percentual restante.</li>
+    <li>Use PATCH para mover a <code>EM_ANDAMENTO</code> e mostre o início preenchido.</li>
+    <li>Conclua o projeto e mostre término realizado e métricas zeradas.</li>
+    <li>Tente uma transição inválida e destaque a mensagem e o rollback.</li>
+    <li>Mostre filtro por status e paginação.</li>
+    <li>Abra o indicador e mostre as chaves do enum.</li>
+    <li>Finalize mostrando testes, migrations, Docker e workflow do GitHub.</li>
+  </ol>
+
+  <h3>Comandos úteis</h3>
+  <pre># Subir
+docker compose up --build --wait
+
+# Testar
+.\mvnw.cmd verify
+
+# Ver containers
+docker compose ps
+
+# Parar preservando dados
+docker compose down</pre>
+
+  <h2>12. Perguntas prováveis da entrevista</h2>
+  <h4>Por que não salvar o status?</h4>
+  <p class="answer">Porque ele depende de “hoje”. Um projeto pode mudar para atrasado sem escrita. Derivar evita sincronização por job e elimina a janela de status desatualizado.</p>
+
+  <h4>Por que status aparece também em uma Specification?</h4>
+  <p class="answer">A política de domínio decide o estado de um projeto. Para filtrar antes da paginação, a mesma lógica precisa ser representada na consulta. Testes comparam os comportamentos e impedem divergência silenciosa.</p>
+
+  <h4>Por que ManyToMany?</h4>
+  <p class="answer">O vínculo não possui atributos. Criar uma entidade intermediária seria cerimônia. Se participação ganhar função, período ou alocação, a modelagem deve evoluir.</p>
+
+  <h4>Por que 422?</h4>
+  <p class="answer">A requisição é sintaticamente válida, mas não pode ser processada por causa das regras atuais do projeto. 400 fica para formato e parâmetros; 409 para conflitos de recursos.</p>
+
+  <h4>Como evita alteração parcial em transição?</h4>
+  <p class="answer">O caso de uso usa uma transação. A regra produz um novo cronograma e valida o destino antes do flush. Exceção provoca rollback, comprovado por integração.</p>
+
+  <h4>Por que Clock?</h4>
+  <p class="answer">Torna tempo uma dependência explícita, permite testes determinísticos e resolve o fuso de negócio sem chamadas espalhadas a <code>now()</code>.</p>
+
+  <h4>Por que não usar Lombok ou MapStruct?</h4>
+  <p class="answer">Records e mapeadores pequenos já resolvem o problema. As dependências adicionariam geração de código sem ganho proporcional.</p>
+
+  <h4>Como tratou concorrência?</h4>
+  <p class="answer">Projeto possui versão otimista. Isso impede que duas atualizações concorrentes sobrescrevam silenciosamente a mesma versão.</p>
+
+  <h4>Qual foi o maior trade-off?</h4>
+  <p class="answer">Status derivado melhora consistência temporal, mas torna o filtro SQL mais complexo. Preferi esse custo à manutenção de um status persistido que poderia ficar desatualizado.</p>
+
+  <h4>O que faria com mais tempo?</h4>
+  <p class="answer">Autenticação e autorização, secretaria como entidade, histórico de transições, métricas históricas, observabilidade, testes de carga e consulta agregada do indicador.</p>
+
+  <h2>13. Decisões revisadas durante o trabalho</h2>
+  <ul>
+    <li><strong>Filtro após paginação:</strong> rejeitado porque quebrava totais e poderia produzir páginas vazias.</li>
+    <li><strong>CONCLUIDO → A_INICIAR:</strong> ajustado após releitura da tabela oficial; agora não altera datas automaticamente.</li>
+    <li><strong>Precisão de Instant:</strong> normalizada para microssegundos por compatibilidade com PostgreSQL.</li>
+    <li><strong>Prazo no dia atual:</strong> documentado como em andamento por falta de um estado definido no enunciado.</li>
+  </ul>
+
+  <div class="page-break"></div>
+  <h2>14. Limitações que você deve admitir</h2>
+  <ul>
+    <li>Não há autenticação ou autorização.</li>
+    <li>Secretaria ainda é texto, não entidade.</li>
+    <li>Não há histórico de mudanças de status.</li>
+    <li>O indicador realiza quatro contagens; grande escala justificaria agregação específica.</li>
+    <li>Busca por substring não tem índice trigram.</li>
+    <li>Actuator expõe somente saúde.</li>
+    <li>Não foram implementados GraphQL, UI ou camada de IA, pois eram diferenciais.</li>
+  </ul>
+  <p>Apresentar limitações demonstra maturidade. Explique por que elas foram deixadas fora: preservar foco no núcleo obrigatório, evitar overengineering e manter a solução explicável.</p>
+
+  <h2>15. Checklist antes da entrevista</h2>
+  <ul>
+    <li>Executar <code>docker compose up --build --wait</code>.</li>
+    <li>Confirmar Swagger, health e indicadores.</li>
+    <li>Executar <code>.\mvnw.cmd verify</code>.</li>
+    <li>Conhecer a precedência dos quatro status sem consultar código.</li>
+    <li>Explicar pelo menos três transições válidas e três bloqueadas.</li>
+    <li>Explicar por que filtro de status precisa ocorrer antes da paginação.</li>
+    <li>Explicar ManyToMany e quando ele deixaria de ser adequado.</li>
+    <li>Explicar Flyway versus <code>ddl-auto</code>.</li>
+    <li>Conhecer as limitações e próximos passos.</li>
+    <li>Não decorar frases: demonstrar o raciocínio por trás das decisões.</li>
+  </ul>
+
+  <h2>16. Encerramento sugerido</h2>
+  <div class="callout">
+    “Eu priorizei a parte mais arriscada do desafio: consistência entre datas, status e transições. Mantive as regras isoladas e determinísticas, validei o comportamento tanto em unidade quanto com PostgreSQL real e documentei as ambiguidades. A solução é simples para o escopo atual, mas possui caminhos claros de evolução.”
+  </div>
+
+  <p class="small">Material de estudo gerado a partir do estado validado do repositório Kanban API. Consulte README, ADRs, Swagger e testes como fontes técnicas definitivas.</p>
+</body>
+</html>

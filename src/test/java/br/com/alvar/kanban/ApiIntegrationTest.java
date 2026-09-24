@@ -31,7 +31,11 @@ public abstract class ApiIntegrationTest {
 
     @BeforeEach
     void cleanDatabase() {
-        jdbcTemplate.execute("TRUNCATE TABLE kanban.projects, kanban.responsibles RESTART IDENTITY CASCADE");
+        jdbcTemplate.execute("TRUNCATE TABLE kanban.projects, kanban.responsibles, kanban.departments RESTART IDENTITY CASCADE");
+        jdbcTemplate.update("""
+                INSERT INTO kanban.departments (name, "createdAt", "updatedAt")
+                VALUES ('Planejamento', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """);
     }
 
     protected long createResponsible(String name, String email) throws Exception {

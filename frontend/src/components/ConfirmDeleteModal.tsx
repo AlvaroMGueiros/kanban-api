@@ -1,13 +1,23 @@
-import type { Project } from '../types/project';
-
+import { useEffect } from 'react';
 interface ConfirmDeleteModalProps {
-  project: Project;
+  subjectName: string;
+  subjectLabel: string;
   deleting: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 }
 
-export function ConfirmDeleteModal({ project, deleting, onCancel, onConfirm }: ConfirmDeleteModalProps) {
+export function ConfirmDeleteModal({ subjectName, subjectLabel, deleting, onCancel, onConfirm }: ConfirmDeleteModalProps) {
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !deleting) {
+        onCancel();
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [deleting, onCancel]);
+
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={deleting ? undefined : onCancel}>
       <section
@@ -21,9 +31,9 @@ export function ConfirmDeleteModal({ project, deleting, onCancel, onConfirm }: C
         <div className="confirm-modal__icon" aria-hidden="true">!</div>
         <div className="confirm-modal__content">
           <span className="eyebrow">CONFIRMAR EXCLUSÃO</span>
-          <h2 id="confirm-delete-title">Excluir projeto?</h2>
+          <h2 id="confirm-delete-title">Excluir {subjectLabel}?</h2>
           <p id="confirm-delete-description">
-            O projeto <strong>“{project.name}”</strong> será removido permanentemente. Esta ação não pode ser desfeita.
+            <strong>“{subjectName}”</strong> será removido permanentemente. Esta ação não pode ser desfeita.
           </p>
         </div>
         <footer className="confirm-modal__actions">
@@ -31,7 +41,7 @@ export function ConfirmDeleteModal({ project, deleting, onCancel, onConfirm }: C
             Cancelar
           </button>
           <button type="button" className="danger-button" onClick={onConfirm} disabled={deleting} autoFocus>
-            {deleting ? 'Excluindo…' : 'Excluir projeto'}
+            {deleting ? 'Excluindo…' : `Excluir ${subjectLabel}`}
           </button>
         </footer>
       </section>

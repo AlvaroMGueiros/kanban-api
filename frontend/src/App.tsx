@@ -1,12 +1,13 @@
 import { useState, type CSSProperties } from 'react';
 import { Alert } from './components/Alert';
+import { CatalogPage } from './components/CatalogPage';
 import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
 import { KanbanColumn } from './components/KanbanColumn';
 import { ProjectFormModal } from './components/ProjectFormModal';
 import { useKanbanBoard } from './hooks/useKanbanBoard';
-import { createProject, deleteProject, listResponsibles, updateProject } from './api/kanbanApi';
+import { useProjectManagement } from './hooks/useProjectManagement';
 import { colors } from './styles/colors';
-import { projectStatuses, type Project, type ProjectRequest, type Responsible } from './types/project';
+import { projectStatuses, type Project } from './types/project';
 
 type ColorVariables = CSSProperties & Record<`--color-${string}`, string>;
 
@@ -30,6 +31,7 @@ const colorVariables: ColorVariables = {
 };
 
 export default function App() {
+  const [currentView, setCurrentView] = useState<'kanban' | 'responsibles' | 'departments'>('kanban');
   const {
     columns,
     loading,
@@ -44,71 +46,25 @@ export default function App() {
     moveProject,
   } = useKanbanBoard();
   const [draggedProject, setDraggedProject] = useState<Project | null>(null);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [responsibles, setResponsibles] = useState<Responsible[]>([]);
-  const [formOpen, setFormOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [formErrorMessage, setFormErrorMessage] = useState<string | null>(null);
-  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  async function openProjectForm(project: Project | null) {
-    setEditingProject(project);
-    setFormErrorMessage(null);
-    setFormOpen(true);
-    try {
-      setResponsibles(await listResponsibles());
-    } catch (error) {
-      setFormErrorMessage(error instanceof Error ? error.message : 'Não foi possível carregar os responsáveis.');
-    }
-  }
-
-  async function saveProject(request: ProjectRequest) {
-    setSaving(true);
-    setFormErrorMessage(null);
-    try {
-      if (editingProject) {
-        await updateProject(editingProject.id, request);
-      } else {
-        await createProject(request);
-      }
-      setFormOpen(false);
-      await loadProjects();
-      showSuccess(editingProject ? 'Projeto atualizado com sucesso.' : 'Projeto criado com sucesso.');
-    } catch (error) {
-      setFormErrorMessage(error instanceof Error ? error.message : 'Não foi possível salvar o projeto.');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function confirmProjectDeletion() {
-    if (!projectToDelete) {
-      return;
-    }
-    setDeleting(true);
-    try {
-      await deleteProject(projectToDelete.id);
-      await loadProjects();
-      showSuccess(`Projeto “${projectToDelete.name}” excluído com sucesso.`);
-      setProjectToDelete(null);
-    } catch (error) {
-      showError(error instanceof Error ? error.message : 'Não foi possível excluir o projeto.');
-    } finally {
-      setDeleting(false);
-    }
-  }
+  const projectManagement = useProjectManagement({
+    refreshProjects: loadProjects,
+    showError,
+    showSuccess,
+  });
 
   return (
     <div className="app-shell" style={colorVariables}>
       <aside className="sidebar">
-        <div className="brand-mark">K</div>
-        <div>
-          <strong>Kanban</strong>
-          <span>Gestão de projetos</span>
-        </div>
+        <div className="sidebar__brand"><div><span>Gestão de projetos</span></div></div>
+        <nav className="sidebar__nav" aria-label="Navegação principal">
+          <button type="button" className={currentView === 'kanban' ? 'active' : ''} onClick={() => setCurrentView('kanban')}>Quadro Kanban</button>
+          <button type="button" className={currentView === 'responsibles' ? 'active' : ''} onClick={() => setCurrentView('responsibles')}>Responsáveis</button>
+          <button type="button" className={currentView === 'departments' ? 'active' : ''} onClick={() => setCurrentView('departments')}>Secretarias</button>
+        </nav>
       </aside>
       <main>
+        {currentView === 'kanban' ? (
+          <>
         <header className="page-header">
           <div>
             <span className="eyebrow">VISÃO OPERACIONAL</span>
@@ -119,7 +75,7 @@ export default function App() {
             <button type="button" className="secondary-button" onClick={() => void loadProjects()} disabled={loading}>
               {loading ? 'Atualizando…' : 'Atualizar quadro'}
             </button>
-            <button type="button" className="primary-button" onClick={() => void openProjectForm(null)}>
+            <button type="button" className="primary-button" onClick={() => void projectManagement.openProjectForm(null)}>
               + Novo projeto
             </button>
           </div>
@@ -146,29 +102,34 @@ export default function App() {
                   }
                 }}
                 onMove={(project, targetStatus) => void moveProject(project, targetStatus)}
-                onEdit={(project) => void openProjectForm(project)}
-                onDelete={setProjectToDelete}
+                onEdit={(project) => void projectManagement.openProjectForm(project)}
+                onDelete={projectManagement.requestProjectDeletion}
               />
             ))}
           </div>
         )}
+          </>
+        ) : (
+          <CatalogPage mode={currentView} />
+        )}
       </main>
-      {formOpen && (
+      {projectManagement.formOpen && (
         <ProjectFormModal
-          project={editingProject}
-          responsibles={responsibles}
-          saving={saving}
-          errorMessage={formErrorMessage}
-          onClose={() => setFormOpen(false)}
-          onSubmit={(request) => void saveProject(request)}
+          project={projectManagement.editingProject}
+          responsibles={projectManagement.responsibles}
+          saving={projectManagement.saving}
+          errorMessage={projectManagement.formErrorMessage}
+          onClose={projectManagement.closeProjectForm}
+          onSubmit={(request) => void projectManagement.saveProject(request)}
         />
       )}
-      {projectToDelete && (
+      {projectManagement.projectToDelete && (
         <ConfirmDeleteModal
-          project={projectToDelete}
-          deleting={deleting}
-          onCancel={() => setProjectToDelete(null)}
-          onConfirm={() => void confirmProjectDeletion()}
+          subjectName={projectManagement.projectToDelete.name}
+          subjectLabel="projeto"
+          deleting={projectManagement.deleting}
+          onCancel={projectManagement.cancelProjectDeletion}
+          onConfirm={() => void projectManagement.confirmProjectDeletion()}
         />
       )}
     </div>

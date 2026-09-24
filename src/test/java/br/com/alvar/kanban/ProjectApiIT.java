@@ -113,6 +113,10 @@ class ProjectApiIT extends ApiIntegrationTest {
     void shouldCombineProjectFiltersBeforePagination() throws Exception {
         long planningId = createResponsible("Ana", "ana@example.com");
         long worksId = createResponsible("Bia", "bia@example.com");
+        jdbcTemplate.update("""
+                INSERT INTO kanban.departments (name, "createdAt", "updatedAt")
+                VALUES ('Obras', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                """);
         jdbcTemplate.update("UPDATE kanban.responsibles SET department = 'Obras' WHERE id = ?", worksId);
         createProject(new ProjectRequest("Reforma da escola", List.of(planningId),
                 today.minusDays(2), today.minusDays(1), null, null));

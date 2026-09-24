@@ -7,6 +7,7 @@ import br.com.alvar.kanban.application.mapper.ResponsibleMapper;
 import br.com.alvar.kanban.domain.exception.ConflictException;
 import br.com.alvar.kanban.domain.exception.ResourceNotFoundException;
 import br.com.alvar.kanban.domain.model.Responsible;
+import br.com.alvar.kanban.infrastructure.repository.DepartmentRepository;
 import br.com.alvar.kanban.infrastructure.repository.ResponsibleRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,9 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ResponsibleService {
     private final ResponsibleRepository responsibleRepository;
+    private final DepartmentRepository departmentRepository;
 
-    public ResponsibleService(ResponsibleRepository responsibleRepository) {
+    public ResponsibleService(ResponsibleRepository responsibleRepository, DepartmentRepository departmentRepository) {
         this.responsibleRepository = responsibleRepository;
+        this.departmentRepository = departmentRepository;
     }
 
     public PageResponse<ResponsibleResponse> list(Pageable pageable) {
@@ -31,7 +34,8 @@ public class ResponsibleService {
 
     @Transactional
     public ResponsibleResponse create(ResponsibleRequest request) {
-        Responsible responsible = new Responsible(request.name(), request.email(), request.role(), request.department());
+        Responsible responsible = new Responsible(request.name(), request.email(), request.role(),
+                findDepartmentName(request.department()));
         if (responsibleRepository.existsByEmail(responsible.getEmail())) {
             throw new ConflictException("Já existe um responsável com este e-mail.");
         }
@@ -45,7 +49,7 @@ public class ResponsibleService {
         if (responsibleRepository.existsByEmailAndIdNot(normalizedEmail, id)) {
             throw new ConflictException("Já existe outro responsável com este e-mail.");
         }
-        responsible.updateDetails(request.name(), normalizedEmail, request.role(), request.department());
+        responsible.updateDetails(request.name(), normalizedEmail, request.role(), findDepartmentName(request.department()));
         responsibleRepository.flush();
         return ResponsibleMapper.toResponse(responsible);
     }
@@ -59,5 +63,11 @@ public class ResponsibleService {
     private Responsible findResponsible(Long id) {
         return responsibleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Responsável", id));
+    }
+
+    private String findDepartmentName(String name) {
+        return departmentRepository.findByNameIgnoreCase(name.trim())
+                .orElseThrow(() -> new ResourceNotFoundException("Secretaria", name))
+                .getName();
     }
 }

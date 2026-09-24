@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { projectStatuses, type Project, type ProjectStatus } from '../types/project';
 import { statusConfig } from '../config/status';
 
@@ -18,8 +19,28 @@ function formatDate(value: string | null): string {
 }
 
 export function ProjectCard({ project, moving, onDragStart, onMove, onEdit, onDelete }: ProjectCardProps) {
+  const menuRef = useRef<HTMLDetailsElement>(null);
   const department = project.responsibles[0]?.department ?? 'Sem secretaria';
   const responsibleNames = project.responsibles.map((responsible) => responsible.name).join(', ');
+
+  useEffect(() => {
+    function closeMenu(event: MouseEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        menuRef.current?.removeAttribute('open');
+      }
+    }
+    function closeMenuByKeyboard(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        menuRef.current?.removeAttribute('open');
+      }
+    }
+    document.addEventListener('mousedown', closeMenu);
+    document.addEventListener('keydown', closeMenuByKeyboard);
+    return () => {
+      document.removeEventListener('mousedown', closeMenu);
+      document.removeEventListener('keydown', closeMenuByKeyboard);
+    };
+  }, []);
 
   return (
     <article
@@ -31,7 +52,7 @@ export function ProjectCard({ project, moving, onDragStart, onMove, onEdit, onDe
         <span className="project-card__id">#{project.id}</span>
         <div className="project-card__header-actions">
           {project.delayDays > 0 && <span className="delay-badge">{project.delayDays}d em atraso</span>}
-          <details className="project-menu">
+          <details ref={menuRef} className="project-menu">
             <summary aria-label={`Abrir opções do projeto ${project.name}`} title="Opções">•••</summary>
             <div className="project-menu__options">
               <button

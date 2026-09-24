@@ -50,7 +50,7 @@ class KanbanApplicationIT extends ApiIntegrationTest {
         assertThat(schemaName).isEqualTo("kanban");
         assertThat(flyway.info().applied())
                 .extracting(migration -> migration.getVersion().getVersion())
-                .contains("1", "2", "3", "4");
+                .contains("1", "2", "3", "4", "5");
         Integer filterIndexCount = jdbcTemplate.queryForObject("""
                 SELECT count(*) FROM pg_indexes
                 WHERE schemaname = 'kanban'
@@ -70,6 +70,7 @@ class KanbanApplicationIT extends ApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.info.title").value("Kanban API"))
                 .andExpect(jsonPath("$.paths['/api/projects']").exists())
+                .andExpect(jsonPath("$.paths['/api/departments']").exists())
                 .andExpect(jsonPath("$.paths['/api/projects'].get.parameters[?(@.name == 'sort')]").exists())
                 .andExpect(jsonPath("$.paths['/api/projects'].get.parameters[?(@.name == 'all')]").isEmpty())
                 .andExpect(jsonPath("$.paths['/api/projects'].get.parameters[?(@.name == 'empty')]").isEmpty())

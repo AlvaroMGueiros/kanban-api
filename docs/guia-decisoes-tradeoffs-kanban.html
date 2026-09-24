@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Decisões e trade-offs — Kanban API</title>
+  <style>
+    @page { size: A4; margin: 16mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; color: #172033; line-height: 1.46; font-size: 10.3pt; margin: 0; }
+    h1 { color: #12355b; font-size: 27pt; margin: 0 0 10px; }
+    h2 { color: #164e63; font-size: 18pt; border-bottom: 2px solid #bae6fd; padding-bottom: 5px; margin-top: 24px; page-break-after: avoid; }
+    h3 { color: #1e3a5f; font-size: 13pt; margin: 17px 0 6px; page-break-after: avoid; }
+    h4 { margin: 10px 0 4px; page-break-after: avoid; }
+    p { margin: 5px 0 9px; }
+    ul, ol { margin: 5px 0 10px 22px; padding: 0; }
+    li { margin: 3px 0; }
+    code { font-family: Consolas, monospace; background: #f1f5f9; padding: 1px 4px; border-radius: 3px; }
+    pre { font-family: Consolas, monospace; background: #0f172a; color: #e2e8f0; padding: 11px; border-radius: 6px; white-space: pre-wrap; font-size: 8.8pt; page-break-inside: avoid; }
+    table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 9.2pt; page-break-inside: avoid; }
+    th { color: white; background: #164e63; text-align: left; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px; vertical-align: top; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    .cover { min-height: 245mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+    .subtitle { font-size: 16pt; color: #475569; max-width: 620px; }
+    .meta { margin-top: 35px; color: #64748b; }
+    .decision { border: 1px solid #cbd5e1; border-left: 6px solid #0284c7; border-radius: 5px; padding: 11px 13px; margin: 12px 0; page-break-inside: avoid; }
+    .decision strong.label { color: #075985; display: inline-block; min-width: 92px; }
+    .answer { border-left: 4px solid #22c55e; background: #f0fdf4; padding: 9px 12px; margin: 8px 0 13px; page-break-inside: avoid; }
+    .warning { border-left: 5px solid #f59e0b; background: #fffbeb; padding: 10px 13px; margin: 10px 0; page-break-inside: avoid; }
+    .page-break { page-break-before: always; }
+    .small { color: #64748b; font-size: 9pt; }
+  </style>
+</head>
+<body>
+  <section class="cover">
+    <h1>Decisões e trade-offs</h1>
+    <p class="subtitle">Como defender a arquitetura da Kanban API em uma entrevista Back-End Sênior</p>
+    <div class="meta">
+      <p><strong>Método:</strong> problema → alternativas → decisão → motivo → custo → quando evoluir.</p>
+      <p><strong>Meta:</strong> compreender o raciocínio; evitar respostas decoradas.</p>
+      <p><strong>Projeto:</strong> github.com/AlvaroMGueiros/kanban-api</p>
+    </div>
+  </section>
+
+  <h2>1. Como um sênior explica decisões</h2>
+  <p>Uma resposta madura não começa pelo nome de uma tecnologia. Ela começa pelo problema. Use sempre esta estrutura:</p>
+  <pre>1. Qual risco ou necessidade existia?
+2. Quais alternativas eram viáveis?
+3. Qual foi escolhida?
+4. Por que ela serve melhor ao contexto?
+5. Qual custo ou limitação foi aceito?
+6. Em qual cenário a decisão deveria mudar?</pre>
+
+  <div class="answer">
+    <strong>Frase-base:</strong> “Eu escolhi X porque o risco principal era Y. A alternativa Z reduziria outro custo, mas adicionaria complexidade que não se justificava neste escopo. O custo aceito foi W; eu revisaria a escolha se a condição K aparecesse.”
+  </div>
+
+  <h3>O que evitar</h3>
+  <ul>
+    <li>“Usei porque é boa prática.”</li>
+    <li>“É mais escalável” sem volume, métrica ou gargalo.</li>
+    <li>“Clean Architecture manda fazer assim.”</li>
+    <li>Defender toda decisão como definitiva.</li>
+    <li>Esconder limitações do projeto.</li>
+  </ul>
+
+  <h2>2. Status derivado das datas</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> O status depende da data atual e pode mudar sem qualquer escrita.</p>
+    <p><strong class="label">Alternativas</strong> Persistir status; atualizar por job; calcular em leitura.</p>
+    <p><strong class="label">Decisão</strong> Calcular a partir do cronograma.</p>
+    <p><strong class="label">Motivo</strong> Evita status desatualizado e elimina sincronização periódica.</p>
+    <p><strong class="label">Custo</strong> Consultas por status ficam mais complexas.</p>
+    <p><strong class="label">Evolução</strong> Em alto volume, avaliar projeção materializada, coluna gerenciada por processo ou modelo orientado a eventos.</p>
+  </div>
+  <div class="answer">“O status não é um dado independente; ele é uma projeção das datas. Persisti-lo criaria duas fontes de verdade.”</div>
+
+  <h3>Pergunta de aprofundamento: e performance?</h3>
+  <p>A derivação é barata por registro, mas o filtro exige predicados sobre datas. Os índices ajudam, porém consultas com OR podem demandar análise do plano. A resposta sênior é medir com volume real antes de materializar.</p>
+
+  <h2>3. Política de domínio e Specification SQL</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> O domínio calcula status em Java, mas a listagem precisa filtrar antes da paginação.</p>
+    <p><strong class="label">Alternativas</strong> Filtrar a página em memória; carregar tudo; traduzir a regra para SQL.</p>
+    <p><strong class="label">Decisão</strong> Política Java para objetos e Specification para consulta.</p>
+    <p><strong class="label">Motivo</strong> Totais e páginas permanecem corretos e o banco processa o conjunto.</p>
+    <p><strong class="label">Custo</strong> Duas representações da mesma regra podem divergir.</p>
+    <p><strong class="label">Mitigação</strong> Testes de integração com cenários equivalentes e precedência explícita.</p>
+  </div>
+  <div class="answer">“Não filtrei depois da paginação porque isso poderia entregar página vazia com `totalElements` incorreto. Aceitei a tradução SQL e protegi a equivalência com testes.”</div>
+
+  <div class="page-break"></div>
+  <h2>4. Clock e tempo de negócio</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> Regras dependem de hoje e do fuso correto.</p>
+    <p><strong class="label">Alternativas</strong> <code>LocalDate.now()</code>; passar a data em todos os controllers; injetar <code>Clock</code>.</p>
+    <p><strong class="label">Decisão</strong> <code>Clock</code> configurável, padrão America/Fortaleza.</p>
+    <p><strong class="label">Motivo</strong> Testes determinísticos e uma referência temporal consistente por operação.</p>
+    <p><strong class="label">Custo</strong> Dependência adicional nos services e configuração de fuso.</p>
+    <p><strong class="label">Evolução</strong> Em sistema multi-região, fuso poderia pertencer à organização ou ao projeto.</p>
+  </div>
+  <div class="answer">“Capturo hoje uma vez por caso de uso. Assim, a operação não atravessa a meia-noite com dois valores diferentes.”</div>
+
+  <h2>5. Limite do dia do vencimento</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> O enunciado exige término maior que hoje para EM_ANDAMENTO, mas não define o estado quando o término é exatamente hoje.</p>
+    <p><strong class="label">Alternativas</strong> Rejeitar; considerar atrasado; manter em andamento durante o dia.</p>
+    <p><strong class="label">Decisão</strong> Considerar em andamento até o final do dia.</p>
+    <p><strong class="label">Motivo</strong> Atraso começa depois do prazo; um registro válido não deve passar a causar erro pela virada para o dia do vencimento.</p>
+    <p><strong class="label">Custo</strong> Interpretação inclusiva de uma condição escrita como “maior que”.</p>
+    <p><strong class="label">Mitigação</strong> ADR, README e testes de boundary.</p>
+  </div>
+  <div class="answer">“A especificação tem uma lacuna no limite. Escolhi estabilidade operacional e documentei a interpretação.”</div>
+
+  <h2>6. Serviço específico de transições</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> Alterar status diretamente poderia contradizer as datas.</p>
+    <p><strong class="label">Alternativas</strong> Setter; regras no controller; regras na entidade; serviço de domínio.</p>
+    <p><strong class="label">Decisão</strong> <code>KanbanTransitionService</code> puro.</p>
+    <p><strong class="label">Motivo</strong> Centraliza a tabela, aplica efeitos e valida o estado resultante.</p>
+    <p><strong class="label">Custo</strong> Tabela explícita com vários ramos e mensagens.</p>
+    <p><strong class="label">Evolução</strong> Se surgirem dezenas de estados, considerar máquina de estados ou tabela declarativa.</p>
+  </div>
+  <pre>origem = calcular(cronograma)
+novoCronograma = aplicarEfeitoPermitido(origem, destino)
+resultado = calcular(novoCronograma)
+se resultado != destino: rejeitar
+senão: persistir</pre>
+
+  <h2>7. Atomicidade e cronograma por valor</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> Uma transição inválida não pode deixar datas parcialmente alteradas.</p>
+    <p><strong class="label">Decisão</strong> Criar novo <code>ProjectSchedule</code>, validar e só depois substituir na entidade dentro da transação.</p>
+    <p><strong class="label">Motivo</strong> Reduz estados intermediários observáveis e permite rollback.</p>
+    <p><strong class="label">Custo</strong> Pequena alocação adicional de objeto.</p>
+    <p><strong class="label">Evidência</strong> Teste de integração confirma 422 e cronograma inalterado.</p>
+  </div>
+
+  <div class="page-break"></div>
+  <h2>8. CONCLUIDO para A_INICIAR</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> A tabela oficial não define ação automática; pede edição das datas.</p>
+    <p><strong class="label">Alternativas</strong> Limpar datas automaticamente; bloquear e orientar.</p>
+    <p><strong class="label">Decisão</strong> Bloquear sem mutação.</p>
+    <p><strong class="label">Motivo</strong> Evita inferir alterações não autorizadas pelo requisito.</p>
+    <p><strong class="label">Custo</strong> Cliente precisa editar antes de repetir a transição.</p>
+  </div>
+  <div class="answer">“Preferi uma ação explícita do cliente a apagar informação implicitamente.”</div>
+
+  <h2>9. Many-to-many direto</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> Projetos têm vários responsáveis e vice-versa.</p>
+    <p><strong class="label">Alternativas</strong> Many-to-many; entidade <code>ProjectResponsible</code>.</p>
+    <p><strong class="label">Decisão</strong> Many-to-many unidirecional.</p>
+    <p><strong class="label">Motivo</strong> O vínculo não possui atributos ou comportamento.</p>
+    <p><strong class="label">Custo</strong> Evolução exige remodelagem se o vínculo ganhar dados.</p>
+    <p><strong class="label">Quando mudar</strong> Função no projeto, horas, alocação, período, responsável principal ou histórico.</p>
+  </div>
+
+  <h2>10. Secretaria como texto</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> Responsável precisa de secretaria, mas não existe catálogo oficial.</p>
+    <p><strong class="label">Alternativas</strong> String; enum inventado; entidade com CRUD.</p>
+    <p><strong class="label">Decisão</strong> String validada.</p>
+    <p><strong class="label">Motivo</strong> Atende ao obrigatório e não inventa valores de negócio.</p>
+    <p><strong class="label">Custo</strong> Pode haver variações semânticas no cadastro.</p>
+    <p><strong class="label">Quando mudar</strong> Se opções precisarem ser controladas, criar entidade; não enum, pois órgãos podem mudar sem deploy.</p>
+  </div>
+  <div class="answer">“Um enum seria uma lista de negócio inventada e acoplada ao deploy. Uma entidade é a evolução correta quando existir catálogo oficial.”</div>
+
+  <h2>11. Entidades de domínio anotadas com JPA</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> Isolar totalmente persistência poderia duplicar o modelo.</p>
+    <p><strong class="label">Alternativas</strong> Modelo puro + modelo JPA + mapeadores; entidades anotadas.</p>
+    <p><strong class="label">Decisão</strong> Entidades do domínio com JPA.</p>
+    <p><strong class="label">Motivo</strong> Os modelos seriam praticamente iguais neste escopo.</p>
+    <p><strong class="label">Custo</strong> Acoplamento às anotações de persistência.</p>
+    <p><strong class="label">Mitigação</strong> Regras centrais continuam estáticas/puras e testáveis sem Spring.</p>
+  </div>
+
+  <h2>12. DTOs e mapeamento manual</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> Entidades JPA não devem definir o contrato público.</p>
+    <p><strong class="label">Alternativas</strong> Expor entidades; MapStruct; mapeadores manuais.</p>
+    <p><strong class="label">Decisão</strong> Records e mapeadores manuais pequenos.</p>
+    <p><strong class="label">Motivo</strong> Contrato explícito sem ferramenta adicional.</p>
+    <p><strong class="label">Custo</strong> Código de mapeamento escrito à mão.</p>
+    <p><strong class="label">Quando mudar</strong> Muitos modelos e transformações repetitivas poderiam justificar MapStruct.</p>
+  </div>
+
+  <div class="page-break"></div>
+  <h2>13. Flyway versus geração automática</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> O schema precisa ser reproduzível e auditável.</p>
+    <p><strong class="label">Alternativas</strong> <code>ddl-auto=create/update</code>; scripts manuais; Flyway.</p>
+    <p><strong class="label">Decisão</strong> Flyway cria; Hibernate valida.</p>
+    <p><strong class="label">Motivo</strong> Mudanças explícitas, ordenadas e revisáveis.</p>
+    <p><strong class="label">Custo</strong> Toda evolução exige migration.</p>
+    <p><strong class="label">Benefício</strong> O mesmo histórico funciona localmente, em teste e em produção.</p>
+  </div>
+
+  <h2>14. PostgreSQL com Testcontainers</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> H2 e mocks não validam SQL, schema e constraints reais.</p>
+    <p><strong class="label">Alternativas</strong> Mocks; H2; banco compartilhado; Testcontainers.</p>
+    <p><strong class="label">Decisão</strong> PostgreSQL descartável por suíte.</p>
+    <p><strong class="label">Motivo</strong> Fidelidade e isolamento.</p>
+    <p><strong class="label">Custo</strong> Docker obrigatório e suíte mais lenta.</p>
+    <p><strong class="label">Evidência</strong> Migrations, precisão temporal, constraints, índices e transações são testados.</p>
+  </div>
+
+  <h2>15. Constraints no domínio e no banco</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> Validação só na API pode ser contornada por outra integração ou concorrência.</p>
+    <p><strong class="label">Decisão</strong> Bean Validation no contrato, invariantes no domínio e constraints no banco.</p>
+    <p><strong class="label">Custo</strong> Algumas regras aparecem em mais de um nível.</p>
+    <p><strong class="label">Motivo</strong> Cada nível protege uma fronteira diferente.</p>
+  </div>
+  <div class="answer">“Bean Validation melhora a resposta ao cliente; domínio protege o caso de uso; banco preserva integridade independentemente da origem da escrita.”</div>
+
+  <h2>16. Códigos HTTP</h2>
+  <table>
+    <tr><th>Código</th><th>Semântica escolhida</th><th>Exemplo</th></tr>
+    <tr><td>400</td><td>Formato ou parâmetro inválido.</td><td>JSON malformado, paginação inválida.</td></tr>
+    <tr><td>404</td><td>Recurso inexistente.</td><td>Projeto não encontrado.</td></tr>
+    <tr><td>409</td><td>Conflito com estado persistido.</td><td>E-mail único, responsável vinculado.</td></tr>
+    <tr><td>422</td><td>Entrada compreensível, inviável pelas regras.</td><td>Datas ou transição incompatível.</td></tr>
+  </table>
+
+  <h2>17. Índices e busca textual</h2>
+  <div class="decision">
+    <p><strong class="label">Decisão</strong> Índices em vínculo, secretaria normalizada e datas usadas no status.</p>
+    <p><strong class="label">Custo</strong> Espaço e escrita mais cara.</p>
+    <p><strong class="label">Não feito</strong> B-tree para <code>%texto%</code>, pois não ajudaria a busca por substring.</p>
+    <p><strong class="label">Quando mudar</strong> Medir volume e <code>EXPLAIN ANALYZE</code>; se necessário, usar <code>pg_trgm</code> com índice GIN.</p>
+  </div>
+
+  <h2>18. Indicador com quatro contagens</h2>
+  <div class="decision">
+    <p><strong class="label">Problema</strong> Exibir quantidade por status mantendo a mesma semântica.</p>
+    <p><strong class="label">Decisão</strong> Reutilizar a Specification em quatro <code>count</code>.</p>
+    <p><strong class="label">Motivo</strong> Implementação pequena, legível e coerente.</p>
+    <p><strong class="label">Custo</strong> Quatro viagens ao banco.</p>
+    <p><strong class="label">Quando mudar</strong> Dashboard frequente ou grande volume justificaria consulta agregada, cache ou projeção.</p>
+  </div>
+
+  <div class="page-break"></div>
+  <h2>19. Docker e CI</h2>
+  <div class="decision">
+    <p><strong class="label">Docker</strong> Build multi-stage reduz imagem final; runtime usa JRE e usuário não privilegiado.</p>
+    <p><strong class="label">Healthcheck</strong> Compose conhece disponibilidade, não apenas processo ativo.</p>
+    <p><strong class="label">CI</strong> Cada push em main e PR executa Java 21 + cache Maven + <code>mvn verify</code>.</p>
+    <p><strong class="label">Custo</strong> Testcontainers consome mais tempo no runner.</p>
+    <p><strong class="label">Não feito</strong> Deploy e imagem em registry, porque não eram necessários.</p>
+  </div>
+
+  <h2>20. O que ficou fora e por quê</h2>
+  <table>
+    <tr><th>Item</th><th>Motivo</th><th>Evolução</th></tr>
+    <tr><td>GraphQL</td><td>Diferencial; REST cobria o núcleo.</td><td>Schema após estabilizar regras.</td></tr>
+    <tr><td>Autenticação</td><td>Fora do escopo obrigatório.</td><td>OIDC/JWT e autorização por perfil.</td></tr>
+    <tr><td>Prometheus</td><td>Health era suficiente para entrega.</td><td>Métricas de latência, erro e banco.</td></tr>
+    <tr><td>UI</td><td>Desafio de backend.</td><td>Kanban com drag-and-drop.</td></tr>
+    <tr><td>CRUD Secretaria</td><td>Diferencial sem catálogo fornecido.</td><td>Entidade, FK e desativação lógica.</td></tr>
+    <tr><td>Camada de IA</td><td>Diferencial; não deveria atrasar o núcleo.</td><td>ADR de RAG ou assistente.</td></tr>
+  </table>
+
+  <h2>21. Perguntas difíceis e respostas</h2>
+  <h4>“Você duplicou regra entre Java e SQL. Isso não viola DRY?”</h4>
+  <div class="answer">DRY evita duplicação de conhecimento sem controle. Aqui existem duas representações necessárias em ambientes diferentes. A política Java é a referência; a tradução SQL existe por performance e paginação. Testes verificam equivalência. Se a regra crescesse muito, eu revisaria a estratégia.</div>
+
+  <h4>“Por que não salvar status e indexar?”</h4>
+  <div class="answer">Isso simplificaria consultas, mas introduziria consistência temporal. Eu só escolheria status persistido com uma estratégia explícita de atualização, tolerância a defasagem e necessidade comprovada por volume.</div>
+
+  <h4>“O projeto está pronto para produção?”</h4>
+  <div class="answer">O núcleo funcional está sólido, mas produção exigiria autenticação, segredos gerenciados, observabilidade, política de backup, deploy/rollback, limites de requisição, tratamento explícito de concorrência e testes de carga.</div>
+
+  <h4>“Por que não criou interfaces para os services?”</h4>
+  <div class="answer">Não havia segunda implementação nem fronteira que exigisse substituição. Interfaces sem necessidade aumentariam navegação e manutenção. Eu criaria quando existisse um contrato com múltiplos adaptadores ou isolamento real.</div>
+
+  <h4>“Como sabe que os índices ajudam?”</h4>
+  <div class="answer">Eles correspondem às colunas dos filtros, mas a confirmação definitiva depende de volume e plano de execução. Em produção eu usaria métricas e EXPLAIN ANALYZE; não trataria a simples existência do índice como prova.</div>
+
+  <h2>22. Exercício para dominar o projeto</h2>
+  <ol>
+    <li>Explique status derivado sem usar a palavra “boa prática”.</li>
+    <li>Desenhe no papel o fluxo do PATCH de transição.</li>
+    <li>Explique por que 422 é diferente de 409.</li>
+    <li>Dê um caso em que Many-to-many deixaria de servir.</li>
+    <li>Defenda Clock e o fuso em 30 segundos.</li>
+    <li>Explique por que a Specification existe e qual risco ela cria.</li>
+    <li>Mostre um teste que prova rollback.</li>
+    <li>Liste três itens necessários antes de produção.</li>
+    <li>Explique uma sugestão de IA que foi rejeitada.</li>
+    <li>Apresente uma limitação sem desvalorizar a solução.</li>
+  </ol>
+
+  <h2>23. Fechamento para entrevista</h2>
+  <div class="answer">“Minha prioridade foi tornar explícitas as invariantes temporais e impedir divergência entre intenção de status e cronograma. Mantive a arquitetura proporcional, testei o domínio isoladamente e validei persistência e HTTP com PostgreSQL real. Sei quais custos aceitei e em quais condições cada decisão precisaria evoluir.”</div>
+
+  <p class="small">Use este guia junto do README, ADRs e testes. Se você consegue explicar cada decisão com suas próprias palavras, consegue defender o projeto sem depender de memorização.</p>
+</body>
+</html>

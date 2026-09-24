@@ -39,7 +39,7 @@ docs/                             # plano, ADRs, diagrama e Postman
 
 ## Modelo de domínio
 
-`Responsible` possui nome, e-mail normalizado e único, cargo e secretaria. `Project` possui nome, datas previstas/realizadas e um ou mais responsáveis. A relação é N:N por `projectResponsibles`; excluir projeto preserva responsáveis e excluir responsável vinculado retorna conflito.
+`Department` mantém o catálogo de secretarias. `Responsible` possui nome, e-mail normalizado e único, cargo e uma secretaria cadastrada. `Project` possui nome, datas previstas/realizadas e um ou mais responsáveis. A relação é N:N por `projectResponsibles`; excluir projeto preserva responsáveis, e vínculos em uso são protegidos por integridade referencial.
 
 Status, dias de atraso e percentual restante são calculados. Datas previstas podem ser nulas; quando um par existe, o término não pode anteceder o início. Datas realizadas futuras são rejeitadas.
 
@@ -116,7 +116,7 @@ A API fica em `http://localhost:8080`; o PostgreSQL, em `127.0.0.1:5433`. `.env.
 ./mvnw verify
 ```
 
-Executa 71 testes unitários e 45 testes de integração/API. A integração usa PostgreSQL 17.11 descartável via Testcontainers e valida migrations, constraints, transações, filtros, paginação, observabilidade e contratos HTTP. Docker precisa estar ativo. Relatórios ficam em `target/surefire-reports` e `target/failsafe-reports`.
+Executa 72 testes unitários e 47 testes de integração/API. O frontend possui 7 testes de componentes e cliente HTTP. A integração usa PostgreSQL 17.11 descartável via Testcontainers e valida migrations, constraints, transações, filtros, paginação, observabilidade e contratos HTTP. Docker precisa estar ativo. Relatórios ficam em `target/surefire-reports` e `target/failsafe-reports`.
 
 ## Swagger
 
@@ -133,6 +133,8 @@ O endpoint Prometheus publica métricas HTTP, JVM, processo, pool de conexões e
 | --- | --- | --- |
 | `POST`, `GET` | `/api/responsibles` | Criar e listar responsáveis |
 | `GET`, `PUT`, `DELETE` | `/api/responsibles/{id}` | Consultar, editar e excluir |
+| `POST`, `GET` | `/api/departments` | Criar e listar secretarias |
+| `PUT`, `DELETE` | `/api/departments/{id}` | Editar e excluir secretaria |
 | `POST`, `GET` | `/api/projects` | Criar e listar projetos |
 | `GET`, `PUT`, `DELETE` | `/api/projects/{id}` | Consultar, editar e excluir |
 | `GET` | `/api/kanban/projects?status=ATRASADO` | Listar uma coluna |
@@ -151,11 +153,11 @@ Importe a [coleção Postman](docs/api/kanban-api.postman_collection.json) para 
 
 ## Banco de dados
 
-As migrations criam o schema `kanban`, `responsibles`, `projects`, `projectResponsibles`, constraints e índices para vínculo, secretaria e datas usadas nos filtros de status. O histórico Flyway fica em `public.flyway_schema_history`. Auditoria usa `Instant`; cronograma usa `LocalDate`; projetos possuem versão otimista. A busca por substring não recebe B-tree, pois consultas `%texto%` não aproveitam esse tipo de índice.
+As migrations criam o schema `kanban`, `departments`, `responsibles`, `projects`, `projectResponsibles`, constraints e índices para vínculo, secretaria e datas usadas nos filtros de status. O histórico Flyway fica em `public.flyway_schema_history`. Auditoria usa `Instant`; cronograma usa `LocalDate`; projetos possuem versão otimista. A busca por substring não recebe B-tree, pois consultas `%texto%` não aproveitam esse tipo de índice.
 
 ## Limitações
 
-- Sem autenticação/autorização e catálogo próprio de secretarias.
+- Sem autenticação/autorização.
 - Indicador executa quatro contagens; grande volume pode pedir uma consulta agregada.
 - Métricas concluídas retornam zero e não representam atraso histórico.
 - Prometheus e Grafana não são orquestrados pelo Compose; a API apenas disponibiliza o endpoint de coleta para integração com a plataforma de observabilidade do ambiente.
@@ -163,7 +165,7 @@ As migrations criam o schema `kanban`, `responsibles`, `projects`, `projectRespo
 ## Próximos passos
 
 - Autenticação por perfis e auditoria de negócio.
-- CRUD de secretarias e filtros por identificador.
+- Filtros de secretaria por identificador.
 - Métricas de negócio, dashboards Grafana e testes de carga.
 
 ## Diferenciais implementados

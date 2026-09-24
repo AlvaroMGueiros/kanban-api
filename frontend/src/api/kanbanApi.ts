@@ -9,7 +9,7 @@ import type {
 
 const pageSize = 100;
 
-async function readResponse<T>(response: Response): Promise<T> {
+export async function readResponse<T>(response: Response): Promise<T> {
   const body = (await response.json()) as T | ApiError;
   if (!response.ok) {
     const apiError = body as ApiError;

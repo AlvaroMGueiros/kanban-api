@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { Project, ProjectRequest, Responsible } from '../types/project';
+import { ResponsibleMultiSelect } from './ResponsibleMultiSelect';
 
 interface ProjectFormModalProps {
   project: Project | null;
@@ -48,6 +49,16 @@ export function ProjectFormModal({
     setFormState(createFormState(project));
   }, [project]);
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !saving) {
+        onClose();
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, saving]);
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     onSubmit({
@@ -57,16 +68,6 @@ export function ProjectFormModal({
       plannedEndDate: optionalDate(formState.plannedEndDate),
       actualStartDate: optionalDate(formState.actualStartDate),
       actualEndDate: optionalDate(formState.actualEndDate),
-    });
-  }
-
-  function toggleResponsible(responsibleId: number) {
-    setFormState((current) => {
-      const selected = current.responsibleIds.includes(responsibleId);
-      const responsibleIds = selected
-        ? current.responsibleIds.filter((id) => id !== responsibleId)
-        : [...current.responsibleIds, responsibleId];
-      return { ...current, responsibleIds };
     });
   }
 
@@ -94,6 +95,7 @@ export function ProjectFormModal({
             <span>Nome do projeto</span>
             <input
               required
+              autoFocus
               maxLength={200}
               value={formState.name}
               onChange={(event) => setFormState((current) => ({ ...current, name: event.target.value }))}
@@ -106,21 +108,11 @@ export function ProjectFormModal({
             {responsibles.length === 0 ? (
               <p>Nenhum responsável cadastrado. Cadastre um responsável pela API antes de criar o projeto.</p>
             ) : (
-              <div className="responsible-options">
-                {responsibles.map((responsible) => (
-                  <label key={responsible.id} className="responsible-option">
-                    <input
-                      type="checkbox"
-                      checked={formState.responsibleIds.includes(responsible.id)}
-                      onChange={() => toggleResponsible(responsible.id)}
-                    />
-                    <span>
-                      <strong>{responsible.name}</strong>
-                      <small>{responsible.department} · {responsible.role}</small>
-                    </span>
-                  </label>
-                ))}
-              </div>
+              <ResponsibleMultiSelect
+                responsibles={responsibles}
+                selectedIds={formState.responsibleIds}
+                onChange={(responsibleIds) => setFormState((current) => ({ ...current, responsibleIds }))}
+              />
             )}
           </fieldset>
 
